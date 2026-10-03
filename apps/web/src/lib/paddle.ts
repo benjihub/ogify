@@ -16,23 +16,11 @@ export async function getPaddleInstance(): Promise<Paddle | undefined> {
 }
 
 export const PADDLE_PRICE_IDS = {
-  starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER ?? "",
-  starterMonthly:
-    process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY ??
-    process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER ??
-    "",
+  starterMonthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY ?? "",
   starterYearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY ?? "",
-  pro: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO ?? "",
-  proMonthly:
-    process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY ??
-    process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO ??
-    "",
+  proMonthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY ?? "",
   proYearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY ?? "",
-  business: process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS ?? "",
-  businessMonthly:
-    process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_MONTHLY ??
-    process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS ??
-    "",
+  businessMonthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_MONTHLY ?? "",
   businessYearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_YEARLY ?? "",
   lifetime: process.env.NEXT_PUBLIC_PADDLE_PRICE_LIFETIME ?? "",
 } as const;

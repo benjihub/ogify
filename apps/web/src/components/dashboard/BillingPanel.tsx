@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { PaddleCheckout } from "@/components/PaddleCheckout";
 import { PLAN_PRICES, PLAN_LIMITS } from "@/lib/paddle";
-import type { PlanId } from "@/lib/paddle";
+import type { CheckoutPlanId, PlanId } from "@/lib/paddle";
 import type { SubscriptionDisplay } from "@/app/dashboard/page";
 
 interface BillingPanelProps {
@@ -11,12 +11,18 @@ interface BillingPanelProps {
   userEmail: string;
 }
 
-type UpgradePlanId = "starter" | "pro" | "business";
+type UpgradePlan = {
+  checkoutId: Extract<
+    CheckoutPlanId,
+    "starterMonthly" | "proMonthly" | "businessMonthly"
+  >;
+  displayPlan: Extract<PlanId, "starter" | "pro" | "business">;
+};
 
-const NEXT_PLAN: Partial<Record<PlanId, UpgradePlanId>> = {
-  free:     "starter",
-  starter:  "pro",
-  pro:      "business",
+const NEXT_PLAN: Partial<Record<PlanId, UpgradePlan>> = {
+  free: { checkoutId: "starterMonthly", displayPlan: "starter" },
+  starter: { checkoutId: "proMonthly", displayPlan: "pro" },
+  pro: { checkoutId: "businessMonthly", displayPlan: "business" },
 };
 
 const PLAN_LABEL: Record<PlanId, string> = {
@@ -97,8 +103,12 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
       {/* Actions */}
       <div className="mt-6 flex flex-col gap-3">
         {!isLifetime && nextPlan && (
-          <PaddleCheckout plan={nextPlan} email={userEmail} variant="primary">
-            Upgrade to {PLAN_LABEL[nextPlan]} — {PLAN_PRICES[nextPlan]}
+          <PaddleCheckout
+            plan={nextPlan.checkoutId}
+            email={userEmail}
+            variant="primary"
+          >
+            Upgrade to {PLAN_LABEL[nextPlan.displayPlan]} — {PLAN_PRICES[nextPlan.displayPlan]}
           </PaddleCheckout>
         )}
 
