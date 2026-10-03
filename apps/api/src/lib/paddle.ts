@@ -14,8 +14,15 @@
  *   transaction.completed   → one-time (lifetime) purchases
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PlanId, SubscriptionRow } from "../types/index.js";
+import type { Env, SubscriptionRow } from "../types/index.js";
 import { PLAN_LIMITS } from "../types/index.js";
+import {
+  isLifetimePaddlePriceId,
+  paddlePricingFromEnv,
+  paddleUserIdFromCustomData,
+  planFromPaddlePriceId,
+  type PaddlePricingConfig,
+} from "./paddle-pricing.js";
 
 // ── Signature verification ────────────────────────────────────────────────
 
@@ -104,14 +111,20 @@ function timingSafeEqual(a: string, b: string): boolean {
  */
 export async function processPaddleEvent(
   payload: PaddleWebhookPayload,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  env: Env
 ): Promise<void> {
   const { event_type, data } = payload;
+  const pricing = paddlePricingFromEnv(env);
 
   switch (event_type) {
     case "subscription.activated":
     case "subscription.updated":
-      await handleSubscriptionChange(data as PaddleSubscriptionData, supabase);
+      await handleSubscriptionChange(
+        data as PaddleSubscriptionData,
+        supabase,
+        pricing
+      );
       break;
 
     case "subscription.cancelled":
@@ -128,7 +141,8 @@ export async function processPaddleEvent(
     case "transaction.completed":
       await handleTransactionCompleted(
         data as PaddleTransactionData,
-        supabase
+        supabase,
+        pricing
       );
       break;
 
@@ -140,15 +154,24 @@ export async function processPaddleEvent(
 
 async function handleSubscriptionChange(
   data: PaddleSubscriptionData,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  pricing: PaddlePricingConfig
 ): Promise<void> {
-  const userId = data.custom_data?.user_id;
+  const userId = paddleUserIdFromCustomData(data.custom_data);
   if (!userId) {
     console.warn("[paddle] subscription event missing custom_data.user_id");
     return;
   }
 
-  const plan = paddlePriceIdToPlan(data.items?.[0]?.price?.id ?? "");
+  const priceId = data.items?.[0]?.price?.id ?? "";
+  const plan = planFromPaddlePriceId(priceId, pricing);
+  if (!plan) {
+    console.warn(
+      `[paddle] Ignoring subscription event with unknown or unconfigured price ID: ${priceId || "(missing)"}`
+    );
+    return;
+  }
+
   const limit = PLAN_LIMITS[plan];
 
   const row: Partial<SubscriptionRow> = {
@@ -176,8 +199,11 @@ async function handleSubscriptionCancelled(
   data: PaddleSubscriptionData,
   supabase: SupabaseClient
 ): Promise<void> {
-  const userId = data.custom_data?.user_id;
-  if (!userId) return;
+  const userId = paddleUserIdFromCustomData(data.custom_data);
+  if (!userId) {
+    console.warn("[paddle] cancellation event missing custom_data.user_id");
+    return;
+  }
 
   const { error } = await supabase
     .from("subscriptions")
@@ -191,8 +217,11 @@ async function handleSubscriptionPaused(
   data: PaddleSubscriptionData,
   supabase: SupabaseClient
 ): Promise<void> {
-  const userId = data.custom_data?.user_id;
-  if (!userId) return;
+  const userId = paddleUserIdFromCustomData(data.custom_data);
+  if (!userId) {
+    console.warn("[paddle] pause event missing custom_data.user_id");
+    return;
+  }
 
   const { error } = await supabase
     .from("subscriptions")
@@ -204,20 +233,27 @@ async function handleSubscriptionPaused(
 
 async function handleTransactionCompleted(
   data: PaddleTransactionData,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  pricing: PaddlePricingConfig
 ): Promise<void> {
   // Lifetime one-time purchase — identify by the price ID
-  const userId = data.custom_data?.user_id;
+  const userId = paddleUserIdFromCustomData(data.custom_data);
   if (!userId) {
     console.warn("[paddle] transaction.completed missing custom_data.user_id");
     return;
   }
 
   const isLifetime = data.items?.some((item) =>
-    (item.price?.id ?? "").includes("lifetime")
+    isLifetimePaddlePriceId(item.price?.id ?? "", pricing)
   );
 
-  if (!isLifetime) return; // not a lifetime deal — skip
+  if (!isLifetime) {
+    const priceIds = data.items?.map((item) => item.price?.id ?? "(missing)") ?? [];
+    console.warn(
+      `[paddle] Ignoring transaction.completed without configured lifetime price ID: ${priceIds.join(", ") || "(missing)"}`
+    );
+    return;
+  }
 
   const row: Partial<SubscriptionRow> = {
     user_id: userId,
@@ -235,19 +271,6 @@ async function handleTransactionCompleted(
     .upsert(row, { onConflict: "user_id" });
 
   if (error) console.error("[paddle] Failed to upsert lifetime sub:", error.message);
-}
-
-// ── Plan mapping ──────────────────────────────────────────────────────────
-
-/**
- * Maps a Paddle price ID to an internal plan name.
- * Adjust the price ID fragments to match your actual Paddle price IDs.
- */
-function paddlePriceIdToPlan(priceId: string): PlanId {
-  if (priceId.includes("business")) return "business";
-  if (priceId.includes("pro")) return "pro";
-  if (priceId.includes("starter")) return "starter";
-  return "free";
 }
 
 // ── Paddle payload types (minimal — extend as needed) ─────────────────────

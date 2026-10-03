@@ -6,8 +6,15 @@ export interface Env {
   PADDLE_WEBHOOK_SECRET: string;
   CACHE_SIGNING_KEY: string;
 
-  // Non-secret vars (wrangler.toml [vars])
+  // Non-secret vars (wrangler.jsonc [vars] or Cloudflare dashboard)
   OGIFY_ENV: "development" | "staging" | "production";
+  PADDLE_PRICE_STARTER_MONTHLY: string;
+  PADDLE_PRICE_STARTER_YEARLY: string;
+  PADDLE_PRICE_PRO_MONTHLY: string;
+  PADDLE_PRICE_PRO_YEARLY: string;
+  PADDLE_PRICE_BUSINESS_MONTHLY: string;
+  PADDLE_PRICE_BUSINESS_YEARLY: string;
+  PADDLE_PRICE_LIFETIME: string;
 
   // Cloudflare bindings
   CACHE: KVNamespace;     // render cache

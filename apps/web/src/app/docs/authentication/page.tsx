@@ -13,7 +13,7 @@ export default function AuthenticationPage() {
 
       <DocsSection title="Pass the key">
         <p>Send the key with the `x-api-key` header.</p>
-        <CodeBlock>{`curl -X POST https://api.ogify.dev/render/template \\
+        <CodeBlock>{`curl -X POST https://api.ogify.online/render/template \\
   -H "x-api-key: $OGIFY_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"template":"blog","title":"Launch notes"}'`}</CodeBlock>

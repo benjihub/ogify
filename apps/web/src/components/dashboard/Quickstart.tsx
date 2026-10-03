@@ -23,13 +23,13 @@ export function Quickstart({ isNewUser, keyPreview }: QuickstartProps) {
     : "";
 
   const snippets: Record<Lang, string> = {
-    curl: `${keyNote ? keyNote + "\n" : ""}curl -X POST https://api.ogify.dev/render/template \\
+    curl: `${keyNote ? keyNote + "\n" : ""}curl -X POST https://api.ogify.online/render/template \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: ${DISPLAY_KEY}" \\
   -d '{"template":"blog","title":"My Post","author":"You"}' \\
   --output social.png`,
 
-    node: `${keyNote ? "// " + keyNote.replace("# ", "") + "\n" : ""}const res = await fetch("https://api.ogify.dev/render/template", {
+    node: `${keyNote ? "// " + keyNote.replace("# ", "") + "\n" : ""}const res = await fetch("https://api.ogify.online/render/template", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -48,7 +48,7 @@ fs.writeFileSync("social.png", Buffer.from(png));`,
     python: `${keyNote ? "# " + keyNote.replace("# ", "") + "\n" : ""}import requests
 
 response = requests.post(
-    "https://api.ogify.dev/render/template",
+    "https://api.ogify.online/render/template",
     headers={"x-api-key": "${DISPLAY_KEY}"},
     json={"template": "blog", "title": "My Post", "author": "You"},
 )

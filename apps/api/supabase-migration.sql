@@ -80,24 +80,31 @@ create index if not exists render_logs_user_created_idx
 -- ── RPC: increment_usage ──────────────────────────────────────────────────
 -- Called from the Worker after every successful render.
 -- Upserts so the first render of the month auto-creates the row.
-
 create or replace function public.increment_usage(
   p_user_id uuid,
   p_period  text
 ) returns void
 language plpgsql
-security definer         -- runs as the table owner, bypasses RLS
-set search_path = public
+security definer
+set search_path = ''
 as $$
 begin
-  insert into usage (user_id, period, renders_used)
+  insert into public.usage (user_id, period, renders_used)
   values (p_user_id, p_period, 1)
   on conflict (user_id, period)
-  do update set renders_used = usage.renders_used + 1;
+  do update
+    set renders_used = public.usage.renders_used + 1;
 end;
 $$;
 
--- ── RLS policies ──────────────────────────────────────────────────────────
+-- Only the backend Worker/service role should increment usage.
+revoke execute on function public.increment_usage(uuid, text) from public;
+revoke execute on function public.increment_usage(uuid, text) from anon;
+revoke execute on function public.increment_usage(uuid, text) from authenticated;
+grant execute on function public.increment_usage(uuid, text) to service_role;
+
+
+── RLS policies ──────────────────────────────────────────────────────────
 -- The Worker uses the SERVICE ROLE key, which bypasses RLS entirely.
 -- These policies protect data when using the anon key from the browser
 -- (e.g. in the Next.js dashboard).

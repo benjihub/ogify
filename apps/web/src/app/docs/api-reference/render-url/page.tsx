@@ -14,7 +14,7 @@ export default function RenderUrlPage() {
       description="Render a screenshot of a public URL using Ogify's browser rendering pipeline."
     >
       <DocsSection title="HTTP request">
-        <CodeBlock>{`GET https://api.ogify.dev/render/url?url=https://example.com&viewport=og
+        <CodeBlock>{`GET https://api.ogify.online/render/url?url=https://example.com&viewport=og
 x-api-key: $OGIFY_KEY`}</CodeBlock>
       </DocsSection>
 
@@ -28,7 +28,7 @@ x-api-key: $OGIFY_KEY`}</CodeBlock>
       </DocsSection>
 
       <DocsSection title="Example">
-        <CodeBlock>{`curl "https://api.ogify.dev/render/url?url=https://example.com&viewport=og" \\
+        <CodeBlock>{`curl "https://api.ogify.online/render/url?url=https://example.com&viewport=og" \\
   -H "x-api-key: $OGIFY_KEY" \\
   --output screenshot.png`}</CodeBlock>
       </DocsSection>

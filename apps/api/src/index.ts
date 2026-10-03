@@ -47,7 +47,11 @@ app.use("*", logger());
 app.use(
   "*",
   cors({
-    origin: ["https://ogify.dev", "https://www.ogify.dev"],
+    origin: [
+      "https://www.ogify.online",
+      "https://ogify.online",
+      "http://localhost:3000",
+    ],
     allowMethods: ["GET", "POST", "OPTIONS"],
     allowHeaders: ["Content-Type", "x-api-key"],
     exposeHeaders: ["X-Renders-Used", "X-Renders-Limit", "X-Cache"],
@@ -342,7 +346,7 @@ app.post("/webhooks/paddle", async (c) => {
 
   const supabase = makeSupabase(c.env);
   try {
-    await processPaddleEvent(payload, supabase);
+    await processPaddleEvent(payload, supabase, c.env);
   } catch (err) {
     console.error("[webhook/paddle] Processing error:", err);
     return c.json({ error: "Processing failed." }, 500);

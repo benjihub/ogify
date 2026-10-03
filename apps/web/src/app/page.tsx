@@ -80,7 +80,7 @@ export default function LandingPage() {
             <span>render / template</span>
           </div>
           <pre className="code-card rounded-b">
-{`curl -X POST https://api.ogify.dev/render/template \\
+{`curl -X POST https://api.ogify.online/render/template \\
   -H "x-api-key: $OGIFY_KEY" \\
   -d '{"template":"blog","title":"My Post"}' \\
   --output social.png`}

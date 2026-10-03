@@ -11,7 +11,7 @@ export default function QuickstartPage() {
       </DocsSection>
 
       <DocsSection title="2. Call the render endpoint">
-        <CodeBlock>{`curl -X POST https://api.ogify.dev/render/template \\
+        <CodeBlock>{`curl -X POST https://api.ogify.online/render/template \\
   -H "x-api-key: $OGIFY_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"template":"blog","title":"My Post"}' \\
@@ -19,7 +19,7 @@ export default function QuickstartPage() {
       </DocsSection>
 
       <DocsSection title="3. Add it to your meta tags">
-        <CodeBlock>{`<meta property="og:image" content="https://api.ogify.dev/render/template?...">
+        <CodeBlock>{`<meta property="og:image" content="https://api.ogify.online/render/template?...">
 <meta name="twitter:card" content="summary_large_image">`}</CodeBlock>
       </DocsSection>
     </DocsShell>

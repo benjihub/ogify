@@ -214,7 +214,7 @@ export default function PricingPage() {
               Open Graph implementation
             </p>
             <pre className="code-card mt-3 text-[12px]">
-              {`<meta property="og:image" content="https://api.ogify.dev/render/template?template=blog&title=Launch" />`}
+              {`<meta property="og:image" content="https://api.ogify.online/render/template?template=blog&title=Launch" />`}
             </pre>
           </div>
         </section>

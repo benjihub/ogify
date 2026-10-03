@@ -8,9 +8,19 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ogify-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-07-01",
+ "name": "ogify-api",
+"main": "src/index.ts",
+
+"workers_dev": true,
+
+"routes": [
+  {
+    "pattern": "api.ogify.online",
+    "custom_domain": true
+  }
+],
+
+"compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true
@@ -34,7 +44,18 @@
   },
   "vars": {
     "OGIFY_ENV": "production",
-    "SUPABASE_URL": "https://fnrwytacoyeqczxeslku.supabase.co"
+   "SUPABASE_URL": "https://fnrwytacoyeqczxeslku.supabase.co",
+
+  "PADDLE_PRICE_STARTER_MONTHLY": "pri_01m411qcsmv83xqfnbrabggvad",
+  "PADDLE_PRICE_STARTER_YEARLY": "pri_01m411xse7jn63t6m94ttdpjtw",
+
+  "PADDLE_PRICE_PRO_MONTHLY": "pri_01m4123w968pwn85m8crja38q5",
+  "PADDLE_PRICE_PRO_YEARLY": "pri_01m4127hte5t8bfbxjygkyfxsc",
+
+  "PADDLE_PRICE_BUSINESS_MONTHLY": "pri_01m412gk9tzzt4d7avjwr73225",
+  "PADDLE_PRICE_BUSINESS_YEARLY": "pri_01m412k47zvzbyetn3fwrhbk5w",
+
+  "PADDLE_PRICE_LIFETIME": "pri_01m412dxjv72d6ac71gpdqnw1a"
   },
   "env": {
     "dev": {

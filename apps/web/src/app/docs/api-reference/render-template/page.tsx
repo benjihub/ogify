@@ -16,7 +16,7 @@ export default function RenderTemplatePage() {
       description="Generate a PNG from one of Ogify's built-in templates."
     >
       <DocsSection title="HTTP request">
-        <CodeBlock>{`POST https://api.ogify.dev/render/template
+        <CodeBlock>{`POST https://api.ogify.online/render/template
 Content-Type: application/json
 x-api-key: $OGIFY_KEY`}</CodeBlock>
       </DocsSection>
@@ -26,7 +26,7 @@ x-api-key: $OGIFY_KEY`}</CodeBlock>
       </DocsSection>
 
       <DocsSection title="Example request">
-        <CodeBlock>{`curl -X POST https://api.ogify.dev/render/template \\
+        <CodeBlock>{`curl -X POST https://api.ogify.online/render/template \\
   -H "x-api-key: $OGIFY_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
