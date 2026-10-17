@@ -1,0 +1,25 @@
+{
+  "name": "ogify-api",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --env dev",
+    "deploy": "wrangler deploy --minify",
+    "deploy:staging": "wrangler deploy --env staging",
+    "type-check": "tsc --noEmit",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "test": "node --test --experimental-strip-types src/lib/paddle-pricing.test.ts src/lib/security.test.ts src/lib/renderers/composite.test.ts src/lib/stored-templates.test.ts src/lib/public-assets.test.ts src/lib/render-links.test.ts"
+  },
+  "dependencies": {
+    "@cloudflare/puppeteer": "1.4.0",
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "@supabase/supabase-js": "^2.110.0",
+    "hono": "^4.12.27"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "wrangler": "^4.106.0",
+    "typescript": "^5.9.3"
+  }
+}

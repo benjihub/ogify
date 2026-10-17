@@ -1,9 +1,5 @@
-/**
- * URL → PNG screenshot using Cloudflare Browser Rendering (Puppeteer).
- */
-import puppeteer from "@cloudflare/puppeteer";
-import type { Env, ScreenshotWaitUntil } from "../../types/index.js";
-import { isPrivateHost } from "../security.js";
+import type { Env, ImageFormat, ScreenshotWaitUntil } from "../../types/index.js";
+import { applyAfterLoad, applyCookies, navigateSafe, openSafePage } from "../browser.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -11,70 +7,124 @@ export interface ScreenshotOptions {
   viewportHeight?: number;
   delay?: number;
   waitUntil?: ScreenshotWaitUntil;
+  waitForSelector?: string;
+  customCss?: string;
+  customJs?: string;
+  userAgent?: string;
+  headers?: Record<string, string>;
+  darkMode?: boolean;
+  fullPage?: boolean;
+  selector?: string;
+  format?: ImageFormat;
+  quality?: number;
+  hideSelectors?: string[];
+  deviceScaleFactor?: number;
+  cookies?: import("../../types/index.js").BrowserCookie[];
+  locale?: string;
+  timezone?: string;
+  clickSelector?: string;
+  scrollTo?: number | "bottom";
+  blockResources?: import("../../types/index.js").BlockableResource[];
+  clip?: { x: number; y: number; width: number; height: number };
+  omitBackground?: boolean;
 }
 
-export async function screenshotUrl(
-  env: Env,
-  {
+export interface ScreenshotResult {
+  bytes: Uint8Array;
+  contentType: string;
+  extension: ImageFormat;
+  width?: number;
+  height?: number;
+}
+
+export async function captureUrl(env: Env, options: ScreenshotOptions): Promise<ScreenshotResult> {
+  const {
     url,
     viewportWidth = 1200,
     viewportHeight = 630,
     delay = 0,
     waitUntil = "networkidle0",
-  }: ScreenshotOptions
-): Promise<Uint8Array> {
-  const clampedDelay = Math.min(Math.max(0, delay), 5_000);
-  // Browser binding types differ slightly between Wrangler and Puppeteer.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const browser = await puppeteer.launch(env.BROWSER as any);
+    waitForSelector,
+    customCss,
+    customJs,
+    userAgent,
+    headers,
+    darkMode,
+    fullPage = false,
+    selector,
+    format = "png",
+    quality = 90,
+    hideSelectors,
+    deviceScaleFactor = 1,
+    cookies,
+    locale,
+    timezone,
+    clickSelector,
+    scrollTo,
+    blockResources,
+    clip,
+    omitBackground = false,
+  } = options;
+
+  const { browser, page } = await openSafePage(env, {
+    viewportWidth,
+    viewportHeight,
+    deviceScaleFactor,
+    userAgent,
+    headers,
+    darkMode,
+    locale,
+    timezone,
+    blockResources,
+  });
 
   try {
-    const page = await browser.newPage();
-    await page.setViewport({ width: viewportWidth, height: viewportHeight });
+    await applyCookies(page, cookies, url);
+    await navigateSafe(page, url, waitUntil);
+    await applyAfterLoad(page, { delay, waitForSelector, customCss, customJs, hideSelectors, clickSelector, scrollTo });
 
-    // Keep fonts and normal image assets so screenshots look like the source site.
-    // Block streaming media/websockets, and block navigation/assets that directly
-    // target private/local addresses (including redirects).
-    await page.setRequestInterception(true);
-    page.on("request", (req) => {
-      const resourceType = req.resourceType();
-      if (["media", "websocket"].includes(resourceType)) {
-        req.abort();
-        return;
-      }
+    const screenshotOptions: Record<string, unknown> = { type: format, omitBackground };
+    if (format !== "png") screenshotOptions.quality = Math.min(100, Math.max(1, Math.round(quality)));
 
-      try {
-        const requestUrl = req.url();
-        if (requestUrl.startsWith("http://") || requestUrl.startsWith("https://")) {
-          const parsed = new URL(requestUrl);
-          if (isPrivateHost(parsed.hostname)) {
-            req.abort();
-            return;
-          }
-        }
-      } catch {
-        req.abort();
-        return;
-      }
-
-      req.continue();
-    });
-
-    await page.goto(url, { waitUntil, timeout: 20_000 });
-
-    if (clampedDelay > 0) {
-      await new Promise((resolve) => setTimeout(resolve, clampedDelay));
+    let raw: unknown;
+    if (selector) {
+      const element = await page.$(selector);
+      if (!element) throw new Error(`Selector not found: ${selector}`);
+      raw = await element.screenshot(screenshotOptions);
+    } else if (fullPage) {
+      raw = await page.screenshot({ ...screenshotOptions, fullPage: true });
+    } else {
+      raw = await page.screenshot({
+        ...screenshotOptions,
+        clip: clip ?? { x: 0, y: 0, width: viewportWidth, height: viewportHeight },
+      });
     }
 
-    const screenshot = (await page.screenshot({
-      type: "png",
-      clip: { x: 0, y: 0, width: viewportWidth, height: viewportHeight },
-    })) as unknown;
-
-    if (screenshot instanceof Uint8Array) return screenshot;
-    if (screenshot instanceof ArrayBuffer) return new Uint8Array(screenshot);
-    throw new Error("Browser screenshot did not return binary PNG data.");
+    const bytes = normalizeBinary(raw);
+    return {
+      bytes,
+      contentType: imageContentType(format),
+      extension: format,
+      width: selector || fullPage ? undefined : (clip?.width ?? viewportWidth),
+      height: selector || fullPage ? undefined : (clip?.height ?? viewportHeight),
+    };
   } finally {
     await browser.close();
   }
+}
+
+/** Backward-compatible PNG helper used by legacy endpoints. */
+export async function screenshotUrl(env: Env, options: ScreenshotOptions): Promise<Uint8Array> {
+  return (await captureUrl(env, { ...options, format: "png" })).bytes;
+}
+
+function normalizeBinary(value: unknown): Uint8Array {
+  if (value instanceof Uint8Array) return value;
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (typeof value === "string") return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+  throw new Error("Browser did not return binary screenshot data.");
+}
+
+function imageContentType(format: ImageFormat): string {
+  return format === "jpeg" ? "image/jpeg" : format === "webp" ? "image/webp" : "image/png";
 }

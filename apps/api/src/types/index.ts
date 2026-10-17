@@ -18,7 +18,7 @@ export interface Env {
 
   // Cloudflare bindings
   CACHE: KVNamespace;
-  /** Optional future persistent storage binding. Production does not require it. */
+  /** Optional persistent storage binding. Current production can run on KV only. */
   RENDERS?: R2Bucket;
   BROWSER: Fetcher;
 }
@@ -72,6 +72,44 @@ export const PLAN_RATE_LIMITS_PER_MINUTE: Record<PlanId, number> = {
 
 export type TemplateId = "blog" | "product" | "saas";
 export type ScreenshotWaitUntil = "load" | "domcontentloaded" | "networkidle0";
+export type ImageFormat = "png" | "jpeg" | "webp";
+export type PdfPageFormat = "A4" | "Letter" | "Legal" | "A3";
+export type BlockableResource = "image" | "stylesheet" | "font" | "media" | "script";
+
+export interface BrowserCookie {
+  name: string;
+  value: string;
+  domain?: string;
+  path?: string;
+  expires?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
+export interface BrowserCustomization {
+  /** Additional delay after navigation/content load. */
+  delay?: number;
+  wait_until?: ScreenshotWaitUntil;
+  wait_for_selector?: string;
+  custom_css?: string;
+  custom_js?: string;
+  user_agent?: string;
+  headers?: Record<string, string>;
+  dark_mode?: boolean;
+  /** Cookies to set before navigation. */
+  cookies?: BrowserCookie[];
+  /** Accept-Language value such as en-US or fr-FR. */
+  locale?: string;
+  /** IANA timezone such as America/New_York. */
+  timezone?: string;
+  /** Click this selector after the page is ready. */
+  click_selector?: string;
+  /** Scroll to a Y coordinate or the bottom before capture/extraction. */
+  scroll_to?: number | "bottom";
+  /** Optional resource types to block for faster captures. */
+  block_resources?: BlockableResource[];
+}
 
 // ── Request / response bodies ─────────────────────────────────────────────
 export interface TemplateRenderRequest {
@@ -90,17 +128,90 @@ export interface TemplateRenderRequest {
   height?: number;
 }
 
-export interface ScreenshotRequest {
+export interface ScreenshotRequest extends BrowserCustomization {
   /** Fully-qualified public URL to capture. */
   url: string;
   /** Viewport width — default 1200, range 320–2400. */
   viewport_width?: number;
-  /** Viewport height — default 630, range 240–1800. */
+  /** Viewport height — default 630, range 240–3000. */
   viewport_height?: number;
-  /** Milliseconds to wait after navigation — default 0, max 5000. */
-  delay?: number;
-  /** Browser navigation strategy. */
-  wait_until?: ScreenshotWaitUntil;
+  /** Capture the complete page instead of only the viewport. */
+  full_page?: boolean;
+  /** Capture only one element. Cannot be combined with full_page. */
+  selector?: string;
+  /** Output image format. */
+  format?: ImageFormat;
+  /** JPEG/WebP quality, 1–100. */
+  quality?: number;
+  /** CSS selectors to hide before capture. */
+  hide_selectors?: string[];
+  /** Device scale factor, 1–3. */
+  device_scale_factor?: number;
+  /** Capture a rectangular region. Cannot be combined with selector/full_page. */
+  clip?: { x: number; y: number; width: number; height: number };
+  /** Keep page transparency when supported. */
+  omit_background?: boolean;
+}
+
+export interface HtmlRenderRequest extends BrowserCustomization {
+  html: string;
+  css?: string;
+  width?: number;
+  height?: number;
+  full_page?: boolean;
+  selector?: string;
+  format?: ImageFormat;
+  quality?: number;
+  device_scale_factor?: number;
+  omit_background?: boolean;
+}
+
+export interface PdfRenderRequest extends BrowserCustomization {
+  /** Exactly one of url or html is required. */
+  url?: string;
+  html?: string;
+  css?: string;
+  /** CSS selectors to hide before PDF capture. */
+  hide_selectors?: string[];
+  format?: PdfPageFormat;
+  landscape?: boolean;
+  print_background?: boolean;
+  margin_top?: string;
+  margin_right?: string;
+  margin_bottom?: string;
+  margin_left?: string;
+}
+
+export interface MetadataExtractRequest extends BrowserCustomization {
+  url: string;
+}
+
+export interface ContentExtractRequest extends BrowserCustomization {
+  url: string;
+  /** Optional element to scope extraction to. */
+  selector?: string;
+  /** Include up to 200 resolved links from the selected document scope. */
+  include_links?: boolean;
+}
+
+export interface PageContent {
+  url: string;
+  title: string;
+  text: string;
+  html: string;
+  links?: Array<{ text: string; url: string }>;
+}
+
+export interface PageMetadata {
+  url: string;
+  title: string;
+  description: string;
+  canonical_url?: string;
+  site_name?: string;
+  image_url?: string;
+  favicon_url?: string;
+  theme_color?: string;
+  locale?: string;
 }
 
 export interface CompositeRenderRequest extends ScreenshotRequest {
@@ -114,6 +225,104 @@ export interface CompositeRenderRequest extends ScreenshotRequest {
   /** Final output size. Defaults to 1200 × 630. */
   width?: number;
   height?: number;
+}
+
+export interface SocialRenderRequest extends Omit<ScreenshotRequest, "selector" | "full_page" | "format" | "quality"> {
+  /** Public page to inspect and capture. */
+  url: string;
+  /** Optional overrides; otherwise Ogify extracts page metadata. */
+  title?: string;
+  author?: string;
+  tag?: string;
+  brand?: string;
+  accent_color?: string;
+  background_color?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface MultiSizeVariant {
+  name?: string;
+  width: number;
+  height: number;
+}
+
+export interface MultiSizeRenderRequest {
+  kind: "template" | "social";
+  variants: MultiSizeVariant[];
+  payload: TemplateRenderRequest | SocialRenderRequest;
+}
+
+export type BatchOperation =
+  | { id?: string; kind: "template"; payload: TemplateRenderRequest }
+  | { id?: string; kind: "url"; payload: ScreenshotRequest }
+  | { id?: string; kind: "html"; payload: HtmlRenderRequest }
+  | { id?: string; kind: "social"; payload: SocialRenderRequest }
+  | { id?: string; kind: "pdf"; payload: PdfRenderRequest };
+
+export interface BatchRenderRequest {
+  operations: BatchOperation[];
+}
+
+export interface StoredHtmlTemplateInput {
+  name: string;
+  html: string;
+  css?: string;
+  width?: number;
+  height?: number;
+  format?: ImageFormat;
+}
+
+export interface StoredHtmlTemplate extends StoredHtmlTemplateInput {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StoredTemplateRenderRequest {
+  data?: Record<string, string | number | boolean | null>;
+  width?: number;
+  height?: number;
+  format?: ImageFormat;
+}
+
+export type JobKind = "template" | "url" | "html" | "pdf" | "social" | "batch";
+
+export interface AsyncJobRequest {
+  kind: JobKind;
+  payload: unknown;
+  webhook_url?: string;
+  /** Optional secret used to HMAC-sign webhook payloads. Ogify never returns it. */
+  webhook_secret?: string;
+}
+
+export interface AsyncJobRecord {
+  id: string;
+  user_id: string;
+  api_key_id: string;
+  kind: JobKind;
+  status: "queued" | "processing" | "completed" | "failed";
+  created_at: string;
+  updated_at: string;
+  result?: unknown;
+  error?: { code: string; message: string };
+  webhook_url?: string;
+  webhook_secret?: string;
+}
+
+export interface RenderLinkRequest {
+  kind: "template" | "url" | "html" | "social";
+  payload: unknown;
+  expires_in_seconds?: number;
+}
+
+export interface RenderLinkRecord extends RenderLinkRequest {
+  id: string;
+  user_id: string;
+  api_key_id: string;
+  created_at: string;
+  expires_at: string;
+  result_url?: string;
 }
 
 export interface UsageResponse {
@@ -134,6 +343,19 @@ export interface PublicRenderResponse {
   cache: "HIT" | "MISS";
   renders_used: number;
   renders_limit: number;
+}
+
+export interface PublicAssetResponse {
+  id: string;
+  url: string;
+  content_type: string;
+  extension: string;
+  bytes: number;
+  width?: number;
+  height?: number;
+  cache?: "HIT" | "MISS";
+  renders_used?: number;
+  renders_limit?: number;
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────

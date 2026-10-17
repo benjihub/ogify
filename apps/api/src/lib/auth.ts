@@ -112,6 +112,46 @@ export async function validateApiKey(
   };
 }
 
+
+export async function loadAuthContextForUser(
+  userId: string,
+  apiKeyId: string,
+  supabase: SupabaseClient
+): Promise<{ ctx: AuthContext } | { error: string; status: 403 | 429; code: string }> {
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("plan, renders_limit, status")
+    .eq("user_id", userId)
+    .single<Pick<SubscriptionRow, "plan" | "renders_limit" | "status">>();
+
+  const subscriptionActive = sub?.status === "active";
+  const plan: PlanId = subscriptionActive ? (sub.plan as PlanId) : "free";
+  const rendersLimit = subscriptionActive ? (sub?.renders_limit ?? PLAN_LIMITS.free) : PLAN_LIMITS.free;
+
+  const period = currentPeriod();
+  const { data: usageRow, error: usageErr } = await supabase
+    .from("usage")
+    .select("renders_used")
+    .eq("user_id", userId)
+    .eq("period", period)
+    .single<Pick<UsageRow, "renders_used">>();
+
+  if (usageErr && usageErr.code !== "PGRST116") {
+    return { error: "Could not retrieve usage data.", status: 403, code: "USAGE_LOOKUP_FAILED" };
+  }
+
+  const rendersUsed = usageRow?.renders_used ?? 0;
+  if (rendersUsed >= rendersLimit) {
+    return {
+      error: `Monthly render limit reached (${rendersUsed}/${rendersLimit}). Upgrade your plan to continue.`,
+      status: 429,
+      code: "MONTHLY_QUOTA_EXCEEDED",
+    };
+  }
+
+  return { ctx: { userId, apiKeyId, plan, rendersLimit, rendersUsed } };
+}
+
 /**
  * Atomically increments the render count for the current month.
  * Uses an upsert so the first render of the month creates the row.
