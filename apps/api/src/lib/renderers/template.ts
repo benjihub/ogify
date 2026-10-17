@@ -1,25 +1,23 @@
 /**
  * SVG → PNG rendering via @resvg/resvg-wasm.
  *
- * The WASM module must be initialised once before use.  In Cloudflare Workers
- * the module is fetched from the package itself during first cold start
- * (~20 ms) and then reused across requests within the same isolate.
+ * The WASM module must be initialised once before use. Cloudflare Workers
+ * require the module to be bundled and precompiled rather than dynamically
+ * compiled from fetched bytes.
  */
 import { Resvg, initWasm } from "@resvg/resvg-wasm";
+import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
 
 let initialized = false;
+let initialization: Promise<void> | undefined;
 
 async function initOnce(): Promise<void> {
   if (initialized) return;
-  // Fetch the WASM binary directly from the npm package's own CDN path.
-  // Wrangler will inline this as a module asset when using the
-  // `[[rules]] type = "CompiledWasm"` approach; the fetch fallback works for
-  // local development and environments that can reach npm CDNs.
-  const resp = await fetch(
-    "https://unpkg.com/@resvg/resvg-wasm/index_bg.wasm"
-  );
-  await initWasm(resp);
-  initialized = true;
+  initialization ??= (async () => {
+    await initWasm(resvgWasm);
+    initialized = true;
+  })();
+  await initialization;
 }
 
 export interface SvgToPngOptions {
@@ -39,7 +37,7 @@ export async function svgToPng(
   const resvg = new Resvg(svg, {
     fitTo: { mode: "width", value: width },
     background: "transparent",
-    font: { loadSystemFonts: true },
+    font: { loadSystemFonts: false },
   });
 
   return resvg.render().asPng();
