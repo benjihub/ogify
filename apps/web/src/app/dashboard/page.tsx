@@ -165,13 +165,15 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* ── Welcome ────────────────────────────────────── */}
-      <div>
-        <h1 className="font-display text-[28px] uppercase tracking-wide text-fg">
-          Welcome back, {firstName}.
-        </h1>
-        <p className="mt-1 font-mono text-xs text-muted">
-          Member since {memberSince}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow mb-2">Workspace overview</p>
+          <h1 className="dashboard-page-title text-paper">Welcome back, {firstName}.</h1>
+          <p className="mt-2 text-sm text-muted">Your rendering workspace at a glance · Member since {memberSince}</p>
+        </div>
+        <a href="#render-studio" className="inline-flex min-h-10 w-fit items-center justify-center gap-2 rounded-lg border border-line-dim bg-ink-soft px-4 py-2 text-sm font-semibold text-paper transition hover:border-line hover:bg-ink-soft/70">
+          <span aria-hidden="true" className="text-cinnabar">＋</span> Create a render
+        </a>
       </div>
 
       {/* ── Stat cards ─────────────────────────────────── */}

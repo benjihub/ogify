@@ -158,14 +158,12 @@ export default function PricingPage() {
     <>
       <Header />
       <main>
-        <section className="mx-auto max-w-6xl px-7 py-24">
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
           <div className="mx-auto mb-10 max-w-[720px] text-center">
-            <div className="mb-3.5 flex items-center justify-center gap-2.5 font-mono text-xs uppercase tracking-[0.14em] text-gold">
-              <span className="h-px w-[18px] bg-gold" />
+            <div className="eyebrow mb-3.5 justify-center">
               Pricing
-              <span className="h-px w-[18px] bg-gold" />
             </div>
-            <h1 className="text-[34px] leading-tight text-paper md:text-[42px]">
+            <h1 className="text-[clamp(2rem,4vw,2.75rem)] leading-[1.1] tracking-[-0.04em] text-paper">
               Simple, transparent pricing
             </h1>
             <p className="mt-4 text-base leading-7 text-muted">
@@ -176,13 +174,15 @@ export default function PricingPage() {
           </div>
 
           <div className="mb-8 flex flex-col items-center justify-center gap-3">
-            <div className="inline-flex rounded border border-line-dim bg-ink-soft p-1">
+            <div className="inline-flex rounded-xl border border-line-dim bg-ink-soft p-1.5">
               {(["monthly", "yearly"] as BillingInterval[]).map((interval) => (
                 <button
+                  type="button"
                   key={interval}
+                  aria-pressed={billingInterval === interval}
                   onClick={() => setBillingInterval(interval)}
                   className={cn(
-                    "h-9 rounded px-4 font-mono text-[11.5px] uppercase tracking-wide transition",
+                    "min-h-10 rounded-lg px-4 text-sm font-semibold capitalize transition",
                     billingInterval === interval
                       ? "bg-paper text-ink"
                       : "text-muted hover:text-paper"
@@ -192,7 +192,7 @@ export default function PricingPage() {
                 </button>
               ))}
             </div>
-            <p className="font-mono text-xs text-line">
+            <p className="text-xs text-muted">
               Yearly plans include 2 months free.
             </p>
           </div>
@@ -210,7 +210,7 @@ export default function PricingPage() {
             ))}
           </div>
 
-          <div className="mt-10 rounded border border-line-dim bg-ink-soft p-5">
+          <div className="mt-10 rounded-2xl border border-line-dim bg-ink-soft/80 p-4 shadow-sm sm:p-5">
             <p className="font-mono text-[11.5px] uppercase tracking-[0.14em] text-gold">
               Open Graph implementation
             </p>
@@ -222,8 +222,8 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="border-t border-line-dim py-20">
-          <div className="mx-auto max-w-6xl px-7">
+        <section className="border-t border-line-dim py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-[28px] leading-tight text-paper">
               Included in every plan
             </h2>
@@ -231,7 +231,7 @@ export default function PricingPage() {
               {INCLUDED.map((feature) => (
                 <div
                   key={feature}
-                  className="flex items-start gap-3 rounded border border-line-dim bg-ink-soft p-4 text-sm text-muted"
+                  className="flex items-start gap-3 rounded-xl border border-line-dim bg-ink-soft/70 p-4 text-sm text-muted"
                 >
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-cinnabar" />
                   <span>{feature}</span>
@@ -241,7 +241,7 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="border-t border-line-dim py-20">
+        <section className="border-t border-line-dim py-16 sm:py-20">
           <div className="mx-auto grid max-w-6xl gap-8 px-7 lg:grid-cols-[0.75fr_1.25fr]">
             <div>
               <div className="mb-3.5 flex items-center gap-2.5 font-mono text-xs uppercase tracking-[0.14em] text-gold">
@@ -292,7 +292,7 @@ function PricingCard({
   return (
     <div
       className={cn(
-        "relative flex min-h-full flex-col rounded border border-line-dim bg-ink-soft p-5 text-paper",
+        "relative flex min-h-full flex-col rounded-2xl border border-line-dim bg-ink-soft/80 p-5 text-paper shadow-sm transition hover:-translate-y-0.5 hover:border-line hover:shadow-lg sm:p-6",
         plan.popular && "border-cinnabar"
       )}
     >
@@ -343,7 +343,7 @@ function PricingCard({
 
 function FounderLicenseCard() {
   return (
-    <div className="rounded border border-gold bg-ink-soft p-6 text-paper">
+    <div className="rounded-2xl border border-gold/50 bg-ink-soft/80 p-5 text-paper shadow-sm sm:p-6">
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
           <div className="mb-3 w-fit rounded border border-gold bg-gold/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-gold">
@@ -368,7 +368,7 @@ function PricingFaq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="rounded border border-line-dim bg-ink-soft">
+    <div className="rounded-2xl border border-line-dim bg-ink-soft/80">
       {FAQS.map((item, index) => {
         const isOpen = openIndex === index;
 

@@ -4,71 +4,316 @@
 
 @layer base {
   :root {
-    /* Local fallbacks keep production builds independent of Google Fonts. */
-    --font-oswald: "Arial Narrow", "Liberation Sans Narrow", Impact, sans-serif;
-    --font-plex-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    /* System-font fallbacks keep the interface fast and independent of font CDNs. */
+    --font-oswald: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-plex-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-plex-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-    --bg: 20 24 31;
-    --bg-soft: 29 35 44;
-    --fg: 239 232 216;
-    --fg-soft: 226 217 194;
-    --muted: 169 175 188;
-    --border: 139 147 161;
-    --border-soft: 58 65 80;
-    --gold: 212 161 44;
+    --bg: 10 15 27;
+    --bg-soft: 17 25 41;
+    --fg: 242 246 252;
+    --fg-soft: 218 226 238;
+    --muted: 148 163 184;
+    --border: 67 82 105;
+    --border-soft: 36 48 68;
+    --gold: 248 196 90;
+    --accent-text: 240 90 58;
+    --accent-bg: 200 62 37;
+    --accent-bg-hover: 164 46 26;
+    --focus: 249 115 86;
   }
 
   .dark {
-    --bg: 20 24 31;
-    --bg-soft: 29 35 44;
-    --fg: 239 232 216;
-    --fg-soft: 226 217 194;
-    --muted: 169 175 188;
-    --border: 139 147 161;
-    --border-soft: 58 65 80;
-    --gold: 212 161 44;
+    color-scheme: dark;
+    --bg: 10 15 27;
+    --bg-soft: 17 25 41;
+    --fg: 242 246 252;
+    --fg-soft: 218 226 238;
+    --muted: 148 163 184;
+    --border: 67 82 105;
+    --border-soft: 36 48 68;
+    --gold: 248 196 90;
+    --accent-text: 240 90 58;
+    --accent-bg: 200 62 37;
+    --accent-bg-hover: 164 46 26;
+    --focus: 249 115 86;
   }
 
   .light {
-    --bg: 247 244 236;
+    color-scheme: light;
+    --bg: 247 249 252;
     --bg-soft: 255 255 255;
-    --fg: 20 24 31;
-    --fg-soft: 48 55 66;
-    --muted: 91 100 114;
-    --border: 139 147 161;
-    --border-soft: 224 218 200;
-    --gold: 154 106 13;
+    --fg: 17 24 39;
+    --fg-soft: 51 65 85;
+    --muted: 100 116 139;
+    --border: 203 213 225;
+    --border-soft: 226 232 240;
+    --gold: 161 98 7;
+    --accent-text: 200 62 37;
+    --accent-bg: 200 62 37;
+    --accent-bg-hover: 164 46 26;
+    --focus: 220 68 45;
   }
 
-  html,
-  body {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
     min-height: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
     background: rgb(var(--bg));
-    color: rgb(var(--fg));
   }
 
   body {
+    min-height: 100vh;
     @apply bg-ink text-paper font-body antialiased;
+    background-image: radial-gradient(ellipse at 50% -18rem, rgba(249, 115, 86, 0.075), transparent 54%);
+    background-attachment: fixed;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1,
   h2,
-  h3 {
-    @apply font-display font-semibold uppercase tracking-wide;
+  h3,
+  h4 {
+    @apply font-display font-semibold;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 3px solid rgb(var(--focus) / 0.72);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    color: #fff;
+    background: #c73e1d;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
+  textarea,
+  select {
+    border-radius: 10px;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: #f05a3a;
+    box-shadow: 0 0 0 3px rgba(240, 90, 58, 0.14);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--muted) / 0.76);
+  }
+
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  img,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
   }
 }
 
 @layer components {
   .code-card {
-    overflow-x: auto;
-    border-radius: 6px;
+    overflow: auto;
+    border-radius: 12px;
     border: 1px solid rgb(var(--border-soft));
-    background: #0d1412;
-    color: #8ff0b2;
-    padding: 1rem;
+    background: #0a1020;
+    color: #a7f3c4;
+    padding: 1.1rem 1.2rem;
     font-family: var(--font-plex-mono), monospace;
     font-size: 12.5px;
-    line-height: 1.7;
-    box-shadow: inset 0 0 0 1px rgba(143, 240, 178, 0.08);
+    line-height: 1.75;
+    tab-size: 2;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 12px 30px rgba(0, 0, 0, 0.08);
+    scrollbar-color: #40506b #0a1020;
+  }
+
+  .surface-panel {
+    border: 1px solid rgb(var(--border-soft));
+    border-radius: 16px;
+    background: rgb(var(--bg-soft) / 0.88);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: rgb(var(--gold));
+    font-family: var(--font-plex-mono), monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  .eyebrow::before {
+    width: 1.1rem;
+    height: 1px;
+    background: currentColor;
+    content: "";
+  }
+
+  .auth-page {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .auth-page::before,
+  .auth-page::after {
+    position: absolute;
+    z-index: -1;
+    width: 22rem;
+    height: 22rem;
+    border-radius: 9999px;
+    content: "";
+    filter: blur(90px);
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .auth-page::before {
+    top: -8rem;
+    left: -8rem;
+    background: #f05a3a;
+  }
+
+  .auth-page::after {
+    right: -9rem;
+    bottom: -10rem;
+    background: #6366f1;
+  }
+
+  .auth-panel {
+    border: 1px solid rgb(var(--border-soft));
+    border-radius: 22px;
+    background: rgb(var(--bg-soft) / 0.94);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+  }
+
+  .hero-preview {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .hero-preview::before {
+    position: absolute;
+    z-index: -1;
+    inset: 12% 8%;
+    border-radius: 30px;
+    background: rgba(240, 90, 58, 0.22);
+    content: "";
+    filter: blur(42px);
+  }
+
+  .nav-link {
+    display: inline-flex;
+    min-height: 38px;
+    align-items: center;
+    border-radius: 10px;
+    padding: 0.5rem 0.7rem;
+    color: rgb(var(--muted));
+    font-size: 0.875rem;
+    font-weight: 550;
+    transition: color 160ms ease, background-color 160ms ease;
+  }
+
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: rgb(var(--fg));
+    background: rgb(var(--fg) / 0.055);
+  }
+
+  .dashboard-shell {
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 50% 0, rgba(240, 90, 58, 0.045), transparent 38%);
+  }
+
+  .dashboard-page-title {
+    font-size: clamp(1.8rem, 3vw, 2.35rem);
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid rgb(var(--border-soft));
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.4;
   }
 }
+
+@media (max-width: 640px) {
+  .max-w-6xl.px-7,
+  .max-w-7xl.px-7 {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .code-card {
+    padding: 0.9rem;
+    font-size: 11.5px;
+  }
+
+  .auth-panel {
+    border-radius: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Text accents use a brighter shade in dark mode and a deeper shade in light mode. */
+.text-cinnabar { color: rgb(var(--accent-text)); }
+.hover\:text-cinnabar:hover { color: rgb(var(--accent-text)); }

@@ -12,8 +12,8 @@ const config: Config = {
         paper: "rgb(var(--fg) / <alpha-value>)",
         "paper-dim": "rgb(var(--fg-soft) / <alpha-value>)",
         cinnabar: {
-          DEFAULT: "#C73E1D",
-          dark: "#9A2E14",
+          DEFAULT: "rgb(var(--accent-bg) / <alpha-value>)",
+          dark: "rgb(var(--accent-bg-hover) / <alpha-value>)",
         },
         gold: "rgb(var(--gold) / <alpha-value>)",
         line: {
@@ -29,7 +29,10 @@ const config: Config = {
         mono: ["var(--font-plex-mono)", "monospace"],
       },
       borderRadius: {
-        DEFAULT: "6px",
+        DEFAULT: "10px",
+        lg: "12px",
+        xl: "16px",
+        "2xl": "22px",
       },
     },
   },

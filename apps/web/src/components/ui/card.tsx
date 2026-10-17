@@ -7,7 +7,12 @@ type CardProps = {
 
 export function Card({ className, children }: CardProps) {
   return (
-    <div className={cn("rounded border border-line-dim bg-ink-soft p-5 text-paper", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-line-dim bg-ink-soft/90 p-5 text-paper shadow-sm transition-colors",
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -15,7 +20,12 @@ export function Card({ className, children }: CardProps) {
 
 export function PaperCard({ className, children }: CardProps) {
   return (
-    <div className={cn("rounded bg-paper p-6 text-ink", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-line-dim bg-ink-soft/90 p-6 text-paper shadow-sm",
+        className
+      )}
+    >
       {children}
     </div>
   );

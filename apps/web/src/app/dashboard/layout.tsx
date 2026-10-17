@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DashboardNavigation } from "@/components/dashboard/DashboardNavigation";
 import { signOut } from "./actions";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -23,41 +24,40 @@ export default async function DashboardLayout({
   const initials = (user.email?.split("@")[0] ?? "?").slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-ink">
-      <header className="sticky top-0 z-40 border-b border-line-dim bg-ink/95 backdrop-blur">
-        <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-7">
-          <Link
-            href="/"
-            className="flex items-center text-fg"
-          >
-            <Logo />
+    <div className="dashboard-shell min-h-screen bg-ink">
+      <header className="sticky top-0 z-40 border-b border-line-dim/80 bg-ink/85 backdrop-blur-xl supports-[backdrop-filter]:bg-ink/75">
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Link href="/dashboard" className="flex shrink-0 items-center text-fg" aria-label="Ogify dashboard home">
+            <Logo markClassName="h-8 w-8" textClassName="text-xl" />
           </Link>
 
-          <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
-            <Link href="/dashboard" className="hover:text-fg">Dashboard</Link>
-            <Link href="/dashboard/renders" className="hover:text-fg">Renders</Link>
-            <Link href="/docs" className="hover:text-fg">Docs</Link>
-            <Link href="/pricing" className="hover:text-fg">Pricing</Link>
-          </nav>
+          <DashboardNavigation />
 
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <ThemeToggle className="h-9 w-9 rounded-lg" />
             <form action={signOut}>
               <button
                 type="submit"
-                className="font-mono text-xs text-muted hover:text-fg"
+                aria-label="Sign out"
+                className="inline-flex rounded-lg px-1.5 py-2 text-[11px] font-semibold text-muted transition hover:bg-ink-soft hover:text-paper sm:px-2 sm:text-xs"
               >
-                Sign out
+                <span className="sm:hidden">Out</span><span className="hidden sm:inline">Sign out</span>
               </button>
             </form>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cinnabar font-mono text-xs font-bold text-paper">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-cinnabar/30 bg-cinnabar/15 font-mono text-xs font-bold text-paper"
+              title={user.email ?? "Signed-in account"}
+              aria-label={`Signed in as ${user.email ?? "account"}`}
+            >
               {initials}
             </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-7 py-10">{children}</main>
+      <main className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8 lg:py-10">
+        {children}
+      </main>
     </div>
   );
 }

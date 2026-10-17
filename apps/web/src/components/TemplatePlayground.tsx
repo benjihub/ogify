@@ -64,37 +64,37 @@ export function TemplatePlayground() {
   }
 
   return (
-    <div className="grid gap-10 md:grid-cols-[0.85fr_1.15fr]">
-      <div className="rounded border border-line-dim bg-ink-soft p-6">
-        <div className="mb-5 flex gap-2">
+    <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:gap-8">
+      <div className="rounded-2xl border border-line-dim bg-ink-soft/80 p-4 shadow-sm sm:p-6">
+        <div className="mb-5 flex gap-1.5 rounded-xl border border-line-dim bg-ink p-1.5">
           {(Object.keys(TEMPLATES) as TemplateId[]).map((id) => (
-            <button key={id} onClick={() => selectTemplate(id)} className={cn("flex-1 rounded border px-0 py-2.5 font-mono text-xs uppercase tracking-wide", activeTemplate === id ? "border-cinnabar bg-cinnabar/10 text-paper" : "border-line-dim text-muted")}>
+            <button type="button" key={id} aria-pressed={activeTemplate === id} onClick={() => selectTemplate(id)} className={cn("min-h-10 flex-1 rounded-lg border border-transparent px-2 py-2 text-xs font-semibold capitalize transition", activeTemplate === id ? "border-cinnabar/30 bg-cinnabar text-white shadow-sm" : "text-muted hover:bg-ink-soft hover:text-paper")}>
               {id}
             </button>
           ))}
         </div>
 
-        <label className="mb-2 block font-mono text-[11px] uppercase tracking-wider text-line">Title</label>
-        <input value={title} maxLength={90} onChange={(e) => setTitle(e.target.value)} className="mb-4 w-full rounded border border-line-dim bg-ink px-3 py-2.5 text-sm text-paper focus:border-cinnabar focus:outline-none" />
-        <label className="mb-2 block font-mono text-[11px] uppercase tracking-wider text-line">Author / site</label>
-        <input value={author} maxLength={70} onChange={(e) => setAuthor(e.target.value)} className="mb-4 w-full rounded border border-line-dim bg-ink px-3 py-2.5 text-sm text-paper focus:border-cinnabar focus:outline-none" />
-        <label className="mb-2 block font-mono text-[11px] uppercase tracking-wider text-line">Tag</label>
-        <input value={tag} maxLength={40} onChange={(e) => setTag(e.target.value)} className="mb-5 w-full rounded border border-line-dim bg-ink px-3 py-2.5 text-sm text-paper focus:border-cinnabar focus:outline-none" />
+        <label htmlFor="playground-title" className="mb-2 block text-xs font-semibold text-fg">Title</label>
+        <input id="playground-title" value={title} maxLength={90} onChange={(e) => setTitle(e.target.value)} className="mb-4 min-h-11 w-full rounded-xl border border-line-dim bg-ink px-3.5 py-3 text-sm text-paper placeholder:text-muted focus:border-cinnabar focus:outline-none focus:ring-4 focus:ring-cinnabar/10" />
+        <label htmlFor="playground-author" className="mb-2 block text-xs font-semibold text-fg">Author / site</label>
+        <input id="playground-author" value={author} maxLength={70} onChange={(e) => setAuthor(e.target.value)} className="mb-4 min-h-11 w-full rounded-xl border border-line-dim bg-ink px-3.5 py-3 text-sm text-paper placeholder:text-muted focus:border-cinnabar focus:outline-none focus:ring-4 focus:ring-cinnabar/10" />
+        <label htmlFor="playground-tag" className="mb-2 block text-xs font-semibold text-fg">Tag</label>
+        <input id="playground-tag" value={tag} maxLength={40} onChange={(e) => setTag(e.target.value)} className="mb-5 min-h-11 w-full rounded-xl border border-line-dim bg-ink px-3.5 py-3 text-sm text-paper placeholder:text-muted focus:border-cinnabar focus:outline-none focus:ring-4 focus:ring-cinnabar/10" />
 
-        <button onClick={renderPreview} disabled={status === "rendering" || !title.trim()} className="w-full rounded bg-cinnabar px-4 py-3 font-mono text-xs uppercase tracking-wide text-paper disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={renderPreview} disabled={status === "rendering" || !title.trim()} className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-cinnabar px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cinnabar-dark disabled:cursor-not-allowed disabled:opacity-50">
           {status === "rendering" ? "Rendering…" : "Render live preview"}
         </button>
-        {error && <p className="mt-3 font-mono text-xs text-cinnabar">{error}</p>}
-        <p className="mt-4 font-mono text-[11px] leading-relaxed text-line">This preview calls Ogify&apos;s production-safe demo renderer. The demo is rate-limited; authenticated API requests have plan-based limits.</p>
+        {error && <p role="alert" className="mt-3 rounded-xl border border-cinnabar/25 bg-cinnabar/10 p-3 text-sm leading-5 text-cinnabar">{error}</p>}
+        <p className="mt-4 text-xs leading-5 text-muted">This preview calls Ogify&apos;s production-safe demo renderer. The demo is rate-limited; authenticated API requests have plan-based limits.</p>
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="relative aspect-[1200/630] overflow-hidden rounded border border-line-dim bg-ink">
+        <div className="relative aspect-[1200/630] overflow-hidden rounded-2xl border border-line-dim bg-ink shadow-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imageUrl} alt={`${activeTemplate} Ogify preview`} className="h-full w-full object-cover" />
-          {status === "rendering" && <div className="absolute inset-0 grid place-items-center bg-ink/70 font-mono text-xs uppercase tracking-wider text-paper">Rendering on Ogify…</div>}
+          {status === "rendering" && <div className="absolute inset-0 grid place-items-center bg-ink/75 text-sm font-semibold text-paper backdrop-blur-sm">Rendering on Ogify…</div>}
         </div>
-        <div className="flex items-center justify-between font-mono text-[10.5px] text-line">
+        <div className="flex items-center justify-between text-xs text-muted">
           <span>1200 × 630 PNG</span>
           <span>{status === "ready" ? "Live render" : "Starter preview"}</span>
         </div>

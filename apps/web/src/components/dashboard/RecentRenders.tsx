@@ -13,15 +13,13 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
     renders.length > 0 ? Math.round((successCount / renders.length) * 100) : 0;
 
   return (
-    <section className="rounded border border-line-dim bg-ink-soft p-6">
+    <section className="rounded-2xl border border-line-dim bg-ink-soft/80 p-4 shadow-sm sm:p-6">
       {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <span className="font-mono text-[10.5px] uppercase tracking-wider text-gold">
-          Recent renders
-        </span>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-paper">Recent renders</span>
         {renders.length > 0 && (
           <div className="flex items-center gap-4">
-            <span className="font-mono text-[10px] text-muted">
+            <span className="text-xs text-muted">
               Success rate:{" "}
               <span
                 className={cn(
@@ -36,7 +34,7 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
                 {successRate}%
               </span>
             </span>
-            <span className="font-mono text-[10px] text-muted">
+            <span className="text-xs text-muted">
               Total this month:{" "}
               <span className="text-fg">{totalRendersUsed.toLocaleString()}</span>
             </span>
@@ -48,10 +46,10 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
         /* Empty state */
         <div className="py-10 text-center">
           <div className="mb-3 font-display text-3xl text-line">◌</div>
-          <p className="font-mono text-sm text-muted">
+          <p className="text-sm text-muted">
             You haven&apos;t made any renders yet.
           </p>
-          <p className="mt-1 font-mono text-xs text-line">
+          <p className="mt-1 text-xs text-muted">
             Copy the cURL command above and make your first one in under 30 seconds.
           </p>
         </div>
@@ -64,7 +62,7 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
                   (col) => (
                     <th
                       key={col}
-                      className="pb-3 text-left font-mono text-[10px] uppercase tracking-wider text-muted"
+                      className="whitespace-nowrap pb-3 text-left text-xs font-semibold text-muted"
                     >
                       {col}
                     </th>
@@ -82,7 +80,7 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
                   )}
                 >
                   <td className="py-3 pr-4">
-                    <span className="rounded bg-ink px-2 py-0.5 font-mono text-[11px] text-muted">
+                    <span className="rounded-md bg-ink px-2 py-1 text-xs font-medium text-muted">
                       {r.type === "template" ? "template" : "url"}
                     </span>
                   </td>
@@ -105,7 +103,7 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
         </div>
       )}
 
-      <div className="mt-4 flex items-center justify-between gap-4 font-mono text-[10px] text-line"><span>Showing last {renders.length} renders.</span><Link href="/dashboard/renders" className="text-cinnabar hover:underline">View full history →</Link></div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>Showing last {renders.length} renders.</span><Link href="/dashboard/renders" className="font-semibold text-cinnabar hover:underline">View full history →</Link></div>
     </section>
   );
 }

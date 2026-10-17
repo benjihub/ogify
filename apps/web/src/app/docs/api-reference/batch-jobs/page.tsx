@@ -1,0 +1,5 @@
+import { CodeBlock, DocsSection, DocsShell } from "../../docs-shell";
+export default function BatchJobsDocs(){return <DocsShell title="Batch rendering & async jobs" description="Run multiple renders in one request or move heavier work to background jobs with completion webhooks.">
+  <DocsSection title="Synchronous batch"><CodeBlock>{`POST /v1/render/batch\n\n{\n  "operations": [\n    {"id":"home","kind":"url","payload":{"url":"https://example.com"}},\n    {"id":"card","kind":"template","payload":{"template":"blog","title":"Launch"}}\n  ]\n}`}</CodeBlock><p>Up to ten mixed operations per batch. Each successful render consumes one render credit.</p></DocsSection>
+  <DocsSection title="Async job"><CodeBlock>{`POST /v1/jobs\n\n{\n  "kind": "pdf",\n  "payload": {"url":"https://example.com/report"},\n  "webhook_url": "https://app.example.com/webhooks/ogify",\n  "webhook_secret": "your-verification-secret"\n}`}</CodeBlock><p>Poll <code>GET /v1/jobs/:id</code> or verify <code>X-Ogify-Signature</code> on the webhook.</p></DocsSection>
+</DocsShell>}

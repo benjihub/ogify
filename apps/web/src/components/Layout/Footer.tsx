@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils";
 
 export function Footer() {
   return (
-    <footer className="border-t border-line-dim py-14">
-      <div className="mx-auto max-w-6xl px-7">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
+    <footer className="border-t border-line-dim bg-ink/50 py-10 sm:py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-10 md:grid-cols-4">
           <div>
             <Logo className="mb-2" textClassName="text-lg" markClassName="h-6 w-6" />
-            <p className="text-sm text-muted">
+            <p className="mt-2 max-w-[220px] text-sm leading-6 text-muted">
               Beautiful social images for your site, in one API call.
             </p>
           </div>
@@ -45,11 +45,11 @@ export function Footer() {
           />
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-line-dim pt-6">
-          <span className="font-mono text-xs text-line">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-line-dim pt-6 sm:mt-12">
+          <span className="text-xs text-muted">
             Ogify — social image infrastructure for developers.
           </span>
-          <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-line">
+          <span className="rounded-full border border-line-dim px-3 py-1.5 text-[11px] font-medium text-muted">
             Paddle — merchant of record
           </span>
         </div>
@@ -69,7 +69,7 @@ function FooterCol({
 
   return (
     <div>
-      <h4 className="mb-3 font-mono text-[11px] uppercase tracking-wider text-gold">
+      <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gold">
         {heading}
       </h4>
       <div className="flex flex-col gap-2">
@@ -100,7 +100,7 @@ function FooterLink({
     <Link
       href={link.href}
       className={cn(
-        "text-sm font-medium text-muted transition hover:text-paper",
+        "text-sm text-muted transition hover:text-paper",
         isActive && "font-bold text-paper"
       )}
     >

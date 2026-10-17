@@ -44,9 +44,9 @@ export function StatCards({
   const isUpgradeable = !["business", "lifetime"].includes(subscription.plan);
 
   return (
-    <div className="grid gap-5 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {/* ── Card 1: Plan ── */}
-      <div className="flex flex-col justify-between rounded border border-line-dim bg-ink-soft p-5">
+      <div className="flex flex-col justify-between rounded-2xl border border-line-dim bg-ink-soft/75 p-5 shadow-sm transition hover:border-line sm:p-6">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <span className="font-mono text-[10.5px] uppercase tracking-wider text-gold">
@@ -54,7 +54,7 @@ export function StatCards({
             </span>
             <PlanBadge plan={subscription.plan} />
           </div>
-          <div className="font-display text-2xl uppercase text-fg">
+          <div className="font-display text-2xl capitalize tracking-tight text-fg">
             {subscription.plan}
           </div>
           <div className="mt-1 font-mono text-sm text-muted">
@@ -81,12 +81,12 @@ export function StatCards({
       </div>
 
       {/* ── Card 2: Usage ── */}
-      <div className="flex flex-col justify-between rounded border border-line-dim bg-ink-soft p-5">
+      <div className="flex flex-col justify-between rounded-2xl border border-line-dim bg-ink-soft/75 p-5 shadow-sm transition hover:border-line sm:p-6">
         <div>
           <span className="font-mono text-[10.5px] uppercase tracking-wider text-gold">
             Usage this month
           </span>
-          <div className="mt-3 font-display text-2xl uppercase text-fg">
+          <div className="mt-3 font-display text-2xl tracking-tight text-fg">
             {rendersUsed.toLocaleString()}
             <span className="font-mono text-base font-normal text-muted">
               {" "}/ {subscription.rendersLimit.toLocaleString()}
@@ -119,7 +119,7 @@ export function StatCards({
       </div>
 
       {/* ── Card 3: API Key ── */}
-      <div className="flex flex-col justify-between rounded border border-line-dim bg-ink-soft p-5">
+      <div className="flex flex-col justify-between rounded-2xl border border-line-dim bg-ink-soft/75 p-5 shadow-sm transition hover:border-line sm:p-6">
         <div>
           <span className="font-mono text-[10.5px] uppercase tracking-wider text-gold">
             API Key

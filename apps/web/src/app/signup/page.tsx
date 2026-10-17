@@ -4,24 +4,35 @@ import { Logo } from "@/components/Logo";
 
 export default function SignupPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6">
+    <main className="auth-page flex min-h-screen flex-col items-center justify-center px-4 py-12 sm:px-6">
       <Link
         href="/"
-        className="mb-10 flex items-center text-paper"
+        aria-label="Back to Ogify home"
+        className="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line-dim bg-ink-soft/80 text-muted transition hover:border-line hover:text-paper sm:left-6 sm:top-6"
       >
-        <Logo />
+        <span aria-hidden="true" className="text-xl leading-none">←</span>
       </Link>
 
-      <div className="mb-8 text-center">
-        <h1 className="font-display text-2xl uppercase tracking-wide text-paper">
-          Create your account
-        </h1>
-        <p className="mt-2 text-sm text-muted">
-          Free forever for 100 renders a month. No card required.
+      <div className="w-full max-w-[440px]">
+        <Link href="/" className="mx-auto flex w-fit items-center text-paper" aria-label="Ogify home">
+          <Logo markClassName="h-9 w-9" textClassName="text-2xl" />
+        </Link>
+
+        <div className="auth-panel mt-8 p-5 sm:p-8">
+          <div className="mb-7 text-center">
+            <div className="eyebrow justify-center">Start building today</div>
+            <h1 className="mt-3 text-3xl tracking-[-0.04em] text-paper">Create your account</h1>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Start free with 100 renders a month. No card required.
+            </p>
+          </div>
+          <AuthForm mode="signup" />
+        </div>
+
+        <p className="mt-5 text-center text-xs leading-5 text-muted">
+          By continuing, you agree to our <Link href="/terms" className="underline decoration-line underline-offset-4 hover:text-paper">Terms</Link> and <Link href="/privacy" className="underline decoration-line underline-offset-4 hover:text-paper">Privacy Policy</Link>.
         </p>
       </div>
-
-      <AuthForm mode="signup" />
     </main>
   );
 }

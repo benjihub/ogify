@@ -72,7 +72,7 @@ export function PaddleCheckout({
         {loading ? "Opening checkout…" : children}
       </Button>
       {error && (
-        <p className="mt-2 font-mono text-xs text-cinnabar" role="alert">
+        <p className="mt-2 rounded-lg border border-cinnabar/25 bg-cinnabar/10 p-3 text-sm leading-5 text-cinnabar" role="alert">
           {error}
         </p>
       )}

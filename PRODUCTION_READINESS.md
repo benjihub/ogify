@@ -1,130 +1,191 @@
-# Ogify Production Readiness
+# Ogify Production Readiness — Developer Platform Build
 
-This build is a production hardening pass designed to add capabilities without forcing risky infrastructure migrations.
+This build expands Ogify into a broader developer rendering platform while preserving the existing production endpoints and avoiding destructive infrastructure migrations.
 
 ## Implemented in this build
 
-### API reliability
+### Core render products
 
-- Request IDs (`X-Request-Id`) on responses and error bodies
-- Consistent machine-readable error codes
-- `429` for monthly quota exhaustion and burst-rate limits
-- Plan-based best-effort edge burst limits using existing KV
-- Screenshot viewport/delay/wait validation
-- Short-lived screenshot caching
-- Failed render logging
-- Root API discovery response and enhanced health endpoint
+- Built-in social-card template rendering
+- URL → PNG/JPEG/WebP
+- full-page screenshots
+- element screenshots by CSS selector
+- HTML/CSS → PNG/JPEG/WebP
+- URL → PDF
+- HTML/CSS → PDF
+- screenshot + branded composite cards
+- smart social cards that extract metadata before rendering
+- multi-size rendering (up to 6 variants)
+- mixed render batches (up to 10 operations)
 
-### Rendering
+### Browser controls
 
-- Worker-safe bundled WASM retained; open-source Inter/JetBrains Mono fonts are installed from pinned Fontsource packages and bundled by Wrangler at build time
-- Safe template color overrides (`#RRGGBB`)
-- Paid-plan template mark behavior
-- Browser screenshots load web fonts/images while blocking media/websocket streams
-- Direct private/local URL blocking on initial navigation and intercepted browser requests
-- New screenshot + branded-card composite renderer
+- viewport and device scale factor
+- `wait_until` and `wait_for_selector`
+- custom CSS injection
+- page-side custom JavaScript
+- dark-mode emulation
+- safe custom headers
+- custom user agent
+- selectors to hide before capture
+- cookies, locale, timezone, click and scroll automation
+- clip regions, transparent captures, and resource blocking
+- private/local URL protection on navigation and intercepted subrequests
 
-### Public image delivery
+### Developer workflow
 
-- New versioned JSON render endpoints
-- Content-hashed immutable public PNG URLs
-- Public images stored in the existing Cloudflare KV binding with one-year TTL
-- No new R2 binding is required, avoiding a production deployment dependency
+- reusable HTML templates with escaped `{{variables}}`
+- CRUD template API
+- asynchronous render jobs
+- optional webhook delivery
+- optional HMAC webhook signatures
+- hosted image/PDF assets
+- HMAC-signed on-demand render links that do not expose raw API keys
+- page metadata extraction
+- hydrated HTML / visible text / resolved-link extraction
+- API auth by `x-api-key` or Bearer token
+- official TypeScript/JavaScript SDK source
+- CLI source
+- OpenAPI discovery
 
-### Dashboard/product
+### Existing platform features preserved
 
-- Real production-safe live template demo
-- Dashboard render studio for template, screenshot, and composite flows
-- Render-history page with filters
-- Corrected feature/pricing claims
-- Public image workflow documented
+- legacy binary `/render/template` and `/render/url`
+- Supabase API-key validation
+- usage tracking and monthly quotas
+- KV burst-rate limiting
+- request IDs
+- render logs
+- Paddle exact price mapping + webhook idempotency
+- dashboard key/usage/billing views
+- live demo endpoint
 
-### Billing
+## Compatibility / infrastructure decisions
 
-- Exact Paddle price mapping retained
-- Webhook replay window retained
-- Webhook idempotency added using the existing KV binding
-- `subscription.resumed` handled with normal subscription activation/update logic
+This build intentionally does **not** require:
 
-### Discoverability
+- a new R2 binding
+- destructive Supabase migrations
+- a new queue product
+- DNS changes
+- credential rotation
+- changes to existing Paddle product IDs
 
-- Canonical metadata / Open Graph / Twitter metadata
-- JSON-LD SoftwareApplication structured data
-- `sitemap.xml`
-- `robots.txt`
-- examples page
-- search-intent landing pages for OG-image and screenshot API queries
+New reusable templates, jobs, hosted generic assets, and render links use the existing Cloudflare KV binding so the feature set can be deployed without an infrastructure migration.
 
-### CI/operations
+## Important production limitations to understand
 
-- Replaced unrelated Webpack workflow with API and web validation jobs
-- API core test step + Cloudflare dry-run step
-- web type-check and build step
-- public status page backed by `/health`
-- request-ID support guidance
+### KV is not a permanent media database
+Hosted generic assets currently use KV with a finite TTL. This is appropriate for launch and moderate usage but long-term/high-volume delivery should move to R2 + CDN.
 
-## Validation performed for this ZIP
+### Monthly quota consumption is still check-then-increment
+Each successful render increments usage after rendering. For strict high-concurrency accounting, replace this with an atomic reservation/consume RPC before charging overages.
 
-- TypeScript/TSX parser scan: **98 source files, 0 syntax errors**
-- API core tests: **8 passed, 0 failed** (Paddle price mapping, custom-data validation, URL/color safety, composite SVG escaping/embedding)
-- `package.json` / lockfile JSON parsing: passed
-- API `npm ci --dry-run --offline`: passed lockfile/dependency-plan validation
-- GitHub Actions YAML parsing: passed
-- secret-like token scan outside Git history: no matches
-- generated/cache directories and Git history are excluded from the deliverable
+### Browser rendering has real-world variability
+Sites can show consent banners, geo-specific pages, login screens, CAPTCHAs, anti-bot pages, or different content to a Cloudflare browser. Ogify captures what the browser receives rather than attempting to bypass access controls.
 
-A full dependency-aware Next.js build and Wrangler dry-run should still be run after `npm ci` in an internet-enabled environment; the included CI workflow performs those checks on push/PR.
+### Custom JavaScript is powerful
+`custom_js` executes inside the isolated browser page, not inside the Worker runtime. It should remain server-side/API-key protected and should never be exposed through an unauthenticated public endpoint.
 
-## Intentionally not forced in this build
+## Validation performed in the generated artifact
 
-The following were intentionally left as non-breaking future upgrades because they require infrastructure/database/account changes that should be rolled out separately:
+- TypeScript/TSX syntax parser scan: passed across the project
+- SDK strict TypeScript check: passed
+- API internal strict type-check with external-runtime stubs: passed except expected stub-only Cloudflare/Hono surface gaps
+- API core tests: **13 passed, 0 failed**
+  - Paddle price mapping
+  - Paddle custom-data validation
+  - URL/private-host security
+  - color validation
+  - composite escaping/embedding
+  - reusable-template HTML escaping
+  - hosted-asset ID/URL stability
+  - signed render-link HMAC verification
+- API/web package JSON and lockfile top-level dependency consistency: passed
+- CLI JavaScript syntax: passed
+- archive integrity: should be checked after ZIP creation
 
-- replacing KV public-image persistence with a dedicated R2/CDN image domain
-- atomic database quota reservation across highly concurrent requests
-- new database tables for Paddle event storage / richer subscription history
-- changing production secrets or rotating credentials
-- adding production DNS/custom image-domain bindings
-- destructive database migration rewrites
+Because this environment cannot download npm packages from the registry, run the real dependency-aware checks below on your machine before production deployment.
+
+## Required pre-deploy checks
+
+```bash
+cd apps/api
+npm ci
+npm run type-check
+npm test
+npx wrangler deploy --dry-run --env=""
+
+cd ../web
+npm ci
+npm run type-check
+npm run build
+
+cd ../../packages/sdk
+npm install
+npm run type-check
+npm run build
+```
+
+Do **not** blindly run `npm audit fix --force` on the API. npm previously attempted to downgrade `@cloudflare/puppeteer` to an old incompatible line. Keep Cloudflare browser compatibility ahead of making the audit counter reach zero.
 
 ## Recommended deployment sequence
 
-1. Run API type-check and Wrangler dry-run.
-2. Deploy Worker and test `/health`.
-3. Test existing `/render/template` and `/render/url` binary endpoints.
-4. Test `/v1/render/template` and open its returned `image_url` in a browser.
-5. Test `/v1/render/url` with a simple public site.
-6. Test `/v1/render/composite`.
-7. Deploy web app.
-8. Verify landing demo, dashboard render studio, docs, sitemap, and status page.
-9. Confirm Paddle webhook secret exists in the production Worker before live billing tests.
+1. Validate API typecheck/tests/dry-run.
+2. Deploy the Worker.
+3. Confirm `/health`.
+4. Re-test legacy `/render/template` and `/render/url`.
+5. Test `/v1/render/url` with PNG and WebP.
+6. Test `/v1/render/html`.
+7. Test `/v1/render/pdf`.
+8. Test `/v1/extract/metadata` and `/v1/extract/content`.
+9. Test `/v1/render/social`.
+10. Test reusable templates.
+11. Test async job polling and a webhook to your own test endpoint.
+12. Test an HMAC-signed on-demand render link.
+13. Deploy the web app.
+14. Test Render Studio and documentation.
+15. Confirm Paddle webhook secret is present before live billing tests.
 
-## Smoke-test commands
+## Smoke tests
 
 ```bash
 curl https://api.ogify.online/health
 
-curl -X POST https://api.ogify.online/v1/render/template \
-  -H "Content-Type: application/json" \
-  -H "x-api-key: $OGIFY_KEY" \
-  -d '{"template":"blog","title":"Production smoke test","author":"Ogify"}'
-
 curl -X POST https://api.ogify.online/v1/render/url \
-  -H "Content-Type: application/json" \
   -H "x-api-key: $OGIFY_KEY" \
-  -d '{"url":"https://example.com","viewport_width":1200,"viewport_height":630}'
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","format":"webp","full_page":true}'
 
-curl -X POST https://api.ogify.online/v1/render/composite \
-  -H "Content-Type: application/json" \
+curl -X POST https://api.ogify.online/v1/render/html \
   -H "x-api-key: $OGIFY_KEY" \
-  -d '{"url":"https://ogify.online","title":"Ogify production smoke test","brand":"Ogify"}'
+  -H "Content-Type: application/json" \
+  -d '{"html":"<h1>Hello Ogify</h1>","width":1200,"height":630}'
+
+curl -X POST https://api.ogify.online/v1/render/pdf \
+  -H "x-api-key: $OGIFY_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","format":"A4"}'
+
+curl -X POST https://api.ogify.online/v1/extract/content \
+  -H "x-api-key: $OGIFY_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://example.com","selector":"main","include_links":true}'
+
+curl -X POST https://api.ogify.online/v1/render/social \
+  -H "x-api-key: $OGIFY_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://ogify.online"}'
 ```
 
-## Deliberately deferred infrastructure changes
+## Scale-up roadmap after paying demand appears
 
-To avoid destabilizing the existing production deployment, this build does not require new Cloudflare bindings or database RPCs. The following are documented scale-up items rather than launch blockers:
+The next infrastructure upgrades should be demand-driven:
 
-- Monthly quota validation still uses the existing check-then-background-increment flow. For strict concurrency enforcement at high volume, move quota consumption into one atomic database RPC.
-- Public generated images use the existing KV namespace. KV-backed public image delivery is eventually consistent; move immutable image bodies to R2/CDN when traffic or multi-region consistency requirements justify it.
-- Screenshot SSRF controls block obvious local/private destinations and subrequests by hostname. A future high-assurance deployment can add DNS-resolution/IP-range enforcement without changing the public API.
-
-None of these deferred items requires changing the current production database schema or adding a new binding today.
+1. R2-backed asset storage and a dedicated image/CDN hostname.
+2. Atomic quota reservations + overage billing.
+3. Cloudflare Queues for high-volume async jobs and retries.
+4. Projects/organizations, scoped keys, and team roles.
+5. Python/PHP SDKs and integrations (Zapier/Make/n8n).
+6. Visual template editor backed by the existing reusable-template API.
+7. Optional image transformation/background-removal service.

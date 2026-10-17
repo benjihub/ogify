@@ -21,20 +21,18 @@ export function UsageChart({ data, rendersUsed, rendersLimit }: UsageChartProps)
       ? data.reduce((best, d) => (d.count > best.count ? d : best), data[0])
       : { date: new Date().toISOString().slice(0, 10), count: 0 };
   const pct = Math.round((rendersUsed / rendersLimit) * 100);
-  const barColor = pct >= 80 ? "#C73E1D" : pct >= 50 ? "#D4A12C" : "#4ade80";
+  const barColor = pct >= 80 ? "#F05A3A" : pct >= 50 ? "#F8C45A" : "#34D399";
 
   const projectedMonthEnd = Math.round(avg * 30);
   const projectedPct = Math.min(100, Math.round((projectedMonthEnd / rendersLimit) * 100));
 
   return (
-    <div className="rounded border border-line-dim bg-ink-soft p-6">
+    <div className="rounded-2xl border border-line-dim bg-ink-soft/80 p-4 shadow-sm sm:p-6">
       {/* Header */}
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <div className="font-mono text-[10.5px] uppercase tracking-wider text-gold">
-            Usage history — past 30 days
-          </div>
-          <div className="mt-1 font-mono text-xs text-muted">
+          <div className="text-sm font-semibold text-paper">Usage history <span className="font-normal text-muted">· past 30 days</span></div>
+          <div className="mt-1 text-xs leading-5 text-muted">
             Peak: <span className="text-fg">{peak.count} renders</span> on{" "}
             {new Date(peak.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             {" · "}
@@ -42,12 +40,12 @@ export function UsageChart({ data, rendersUsed, rendersLimit }: UsageChartProps)
           </div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-xs text-muted">
+          <div className="text-xs text-muted">
             Projected month-end
           </div>
           <div
             className={cn(
-              "mt-0.5 font-mono text-xs",
+              "mt-0.5 text-xs font-semibold",
               projectedPct >= 100 ? "text-cinnabar" : "text-fg"
             )}
           >

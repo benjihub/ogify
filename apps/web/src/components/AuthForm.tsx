@@ -93,7 +93,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full">
       <div className="grid gap-3">
         <Button
           className="w-full justify-center"
@@ -157,13 +157,13 @@ export function AuthForm({ mode }: AuthFormProps) {
         />
 
         {error && (
-          <p className="mb-4 font-mono text-xs text-cinnabar">{error}</p>
+          <p className="mb-4 rounded-lg border border-cinnabar/25 bg-cinnabar/10 px-3.5 py-3 text-sm leading-5 text-cinnabar">{error}</p>
         )}
 
         {success && (
-          <div className="mb-4 flex items-center gap-3 rounded border border-[#4ade80]/40 bg-[#4ade80]/10 px-3.5 py-3">
+          <div role="status" aria-live="polite" className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-3">
             <Spinner />
-            <p className="font-mono text-xs leading-relaxed text-[#8ff0b2]">
+            <p className="text-sm leading-relaxed text-emerald-300">
               {success}
             </p>
           </div>
@@ -191,14 +191,14 @@ export function AuthForm({ mode }: AuthFormProps) {
         {mode === "login" ? (
           <>
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-paper underline">
+            <Link href="/signup" className="font-semibold text-paper underline decoration-cinnabar underline-offset-4 hover:text-cinnabar">
               Sign up
             </Link>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <Link href="/login" className="text-paper underline">
+            <Link href="/login" className="font-semibold text-paper underline decoration-cinnabar underline-offset-4 hover:text-cinnabar">
               Log in
             </Link>
           </>
@@ -212,7 +212,7 @@ function Spinner() {
   return (
     <span
       aria-hidden="true"
-      className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-[#8ff0b2]/30 border-t-[#8ff0b2]"
+      className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-emerald-300/30 border-t-emerald-300"
     />
   );
 }

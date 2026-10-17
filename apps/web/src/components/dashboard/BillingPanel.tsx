@@ -47,21 +47,19 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
     : null;
 
   return (
-    <section className="flex flex-col justify-between rounded border border-line-dim bg-ink-soft p-6">
+    <section className="flex flex-col justify-between rounded-2xl border border-line-dim bg-ink-soft/80 p-4 shadow-sm sm:p-6">
       {/* Header */}
       <div>
-        <span className="font-mono text-[10.5px] uppercase tracking-wider text-gold">
-          Plan &amp; Billing
-        </span>
+        <span className="text-sm font-semibold text-paper">Plan &amp; billing</span>
 
         {/* Plan summary */}
-        <div className="mt-4 rounded border border-line-dim bg-ink p-4">
+        <div className="mt-4 rounded-xl border border-line-dim bg-ink p-4">
           <div className="flex items-start justify-between">
             <div>
               <div className="font-display text-lg uppercase tracking-wide text-fg">
                 {PLAN_LABEL[plan]}
               </div>
-              <div className="mt-0.5 font-mono text-sm text-muted">
+              <div className="mt-1 text-sm text-muted">
                 {PLAN_PRICES[plan]}
               </div>
             </div>
@@ -74,14 +72,14 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
           </div>
 
           {billingDate && (
-            <div className="mt-3 border-t border-line-dim pt-3 font-mono text-[11px] text-muted">
+            <div className="mt-3 border-t border-line-dim pt-3 text-xs text-muted">
               Next renewal: <span className="text-fg">{billingDate}</span>
             </div>
           )}
 
           {isLifetime && (
             <div className="mt-3 border-t border-line-dim pt-3">
-              <p className="font-mono text-[11px] leading-relaxed text-gold">
+              <p className="text-xs leading-5 text-gold">
                 You&apos;re on the Founder&apos;s Lifetime plan.
                 Thank you for supporting Ogify early. ❤️
               </p>
@@ -92,7 +90,7 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
         {/* Feature list */}
         <ul className="mt-4 space-y-2">
           {getPlanFeatures(plan).map((f) => (
-            <li key={f} className="flex items-center gap-2.5 font-mono text-xs text-muted">
+            <li key={f} className="flex items-center gap-2.5 text-xs text-muted">
               <span className="text-[#4ade80]">✓</span>
               {f}
             </li>
@@ -119,7 +117,7 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
         )}
 
         {plan !== "free" && !isLifetime && (
-          <p className="rounded border border-line px-3 py-2.5 text-center font-mono text-[11px] leading-relaxed text-muted">
+          <p className="rounded-xl border border-line-dim px-3 py-3 text-center text-xs leading-5 text-muted">
             Manage or cancel billing from the secure Paddle customer-portal link in your purchase receipt or Paddle email.
           </p>
         )}
@@ -127,7 +125,7 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
         {plan === "free" && (
           <Link
             href="/pricing"
-            className="text-center font-mono text-[11px] text-muted hover:text-fg"
+            className="text-center text-xs font-semibold text-muted hover:text-fg"
           >
             Compare all plans →
           </Link>

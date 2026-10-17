@@ -1,71 +1,145 @@
-# Ogify
+# Ogify — Render API for developers
 
-Ogify turns structured content and public URLs into share-ready PNGs through a developer-friendly API.
+Ogify turns URLs, HTML, templates, and page metadata into production-ready images and PDFs. It is designed for developers who do not want to run Chromium fleets, maintain image-generation infrastructure, or build their own social-card pipeline.
 
-## Production capabilities
+## What this build includes
 
-- Built-in Open Graph/social-card templates (`blog`, `product`, `saas`)
-- Website screenshot rendering with Cloudflare Browser Rendering
-- Composite rendering: live website screenshot + branded social-card layout
-- Immutable public PNG URLs for `og:image`, Twitter cards, Slack, Discord, and CMS integrations
-- API-key authentication backed by Supabase
-- Monthly usage quotas and best-effort edge burst limits
-- Edge caching for templates and screenshots
-- Dashboard with key management, usage, render history, billing, and a render studio
-- Paddle billing/webhook handling with exact price mapping and webhook idempotency
-- Live public template playground with a tightly rate-limited demo endpoint
-- OpenAPI discovery at `https://api.ogify.online/openapi.json`
-- SEO landing pages, sitemap, robots metadata, and structured data
+### Rendering
+- Built-in social-card templates (`blog`, `product`, `saas`)
+- URL → PNG / JPEG / WebP
+- Full-page screenshots
+- Element screenshots with CSS selectors
+- HTML + CSS → PNG / JPEG / WebP
+- URL → PDF
+- Rendered page → metadata / hydrated HTML / visible text / Markdown / links
+- Structured extraction by CSS selector rules
+- Brand profile and normalized link-preview extraction
+- HTML + CSS → PDF
+- Best-effort PDF text extraction; optional PDF-to-image/thumbnails service
+- Screenshot + branded composite cards
+- Smart social cards: URL metadata + screenshot + branded composition
+- Multi-size rendering (up to 6 variants)
+- Mixed batch rendering (up to 10 operations)
 
-## Repository structure
+### Browser controls
+- viewport and device scale factor
+- wait strategy + wait-for-selector
+- custom CSS injection
+- page-side custom JavaScript
+- custom user agent, safe headers, and cookies
+- locale and timezone emulation
+- click + scroll automation, clip regions, and transparent captures
+- optional resource blocking and ad/tracker URL blocking
+- device presets with mobile/touch emulation and DPR scaling
+- locale, timezone, country-profile and browser geolocation emulation
+- cookie-banner / popup cleanup heuristics and optional accept-button click
+- dark-mode emulation and selectors to hide before capture
+- private/local host protections on page requests
+- customer proxy routing adapter when `PROXY_RENDERER` is configured
 
-- `apps/web` — Next.js customer application, dashboard, pricing, docs, SEO pages
-- `apps/api` — Hono + Cloudflare Worker rendering API
-- `packages/shared` — shared API response types
-- `.github/workflows/ci.yml` — API/web CI validation
+### Developer platform
+- Hosted render asset URLs
+- HMAC-signed on-demand render links that do not expose API keys
+- Reusable HTML templates with `{{variables}}` and dashboard visual editor
+- Saved render collections for reusable multi-size campaigns
+- Project CRUD and API-key scopes / expiry / origin / IP policies
+- Bounded browser action sequences
+- Async render jobs with processing retry
+- Completion webhooks with HMAC signatures, retries, delivery logs and dead-letter records
+- Customer S3/R2 export via presigned PUT URL
+- Optional video and PDF page-conversion service adapters
+- Render usage + rate-limit headers
+- API key auth by `x-api-key` or Bearer token
+- OpenAPI discovery
+- Official TypeScript/JavaScript SDK source under `packages/sdk`
+- CLI under `packages/cli`
 
-## API endpoints
+### Product application
+- Next.js landing site and documentation
+- Dashboard API-key management
+- Usage and render history
+- Render Studio supporting template, screenshot, social, HTML, and PDF workflows
+- Paddle billing integration
+- Supabase auth/data
 
-### Existing binary endpoints
+## Main endpoints
 
-- `POST /render/template` → `image/png`
-- `POST /render/url` → `image/png`
-- `GET /me/usage` → JSON
+### Backward compatible
+- `POST /render/template` → PNG binary
+- `POST /render/url` → PNG binary
+- `GET /me/usage`
 
-These remain for backward compatibility.
+### Versioned developer API
+- `POST /v1/render/template`
+- `POST /v1/render/url`
+- `POST /v1/render/html`
+- `POST /v1/render/pdf`
+- `POST /v1/render/composite`
+- `POST /v1/render/social`
+- `POST /v1/render/multi`
+- `POST /v1/render/batch`
+- `POST /v1/extract/metadata`
+- `POST /v1/extract/content`
+- `POST /v1/extract/markdown`
+- `POST /v1/extract/structured`
+- `POST /v1/extract/brand`
+- `POST /v1/preview/link`
+- `POST /v1/browser/run`
+- `POST /v1/render/video` (optional service binding)
+- `POST /v1/documents/pdf-to-text`
+- `POST /v1/documents/pdf-to-images` and `/pdf-thumbnails` (optional service binding)
+- `GET|POST|PUT|DELETE /v1/templates`
+- `POST /v1/templates/:id/render`
+- `POST /v1/jobs`
+- `GET /v1/jobs/:id`
+- `POST /v1/render-links`
+- `GET|POST|PUT|DELETE /v1/projects`
+- `GET|PUT /v1/api-keys/:id/policy`
+- `GET|POST|DELETE /v1/collections`
+- `POST /v1/collections/:id/render`
+- `POST /v1/storage/export`
+- `GET /v1/devices`, `/v1/countries`, `/v1/capabilities`
+- `GET /v1/me/usage`
 
-### Versioned endpoints
+### Public delivery
+- `GET /i/:id.png` — legacy generated PNGs
+- `GET /a/:asset` — hosted images/PDFs
+- `GET /r/:id` — on-demand render links
 
-- `POST /v1/render/template` → JSON with immutable `image_url`
-- `POST /v1/render/url` → JSON with immutable `image_url`
-- `POST /v1/render/composite` → JSON with immutable `image_url`
-- `GET /v1/me/usage` → JSON
-- `GET /i/:id.png` → public generated PNG
+## Repository
 
-### Public/product endpoints
+- `apps/api` — Hono + Cloudflare Worker API
+- `apps/web` — Next.js customer site/dashboard/docs
+- `packages/sdk` — official JS/TS SDK source
+- `packages/cli` — CLI source
+- `packages/shared` — shared types
 
-- `GET /health`
-- `GET /openapi.json`
-- `POST /demo/render/template` — restricted public demo renderer
-- `POST /webhooks/paddle`
+## Production stack
 
-## Development
+- Vercel — web app
+- Cloudflare Workers + Browser Run — render API and browser automation
+- Cloudflare KV — render cache, hosted assets, template definitions, jobs, projects, key policies, collections and short-window limits
+- Optional Cloudflare service bindings — customer proxy renderer, video renderer and document conversion service
+- Supabase — auth, API-key hashes, subscriptions, usage, render logs
+- Paddle — Merchant of Record / subscription billing
 
-See:
+## Validate before deploy
 
-- `apps/web/README.md`
-- `apps/api/README.md`
-- `PRODUCTION_READINESS.md`
+```bash
+cd apps/api
+npm ci
+npm run type-check
+npm test
+npx wrangler deploy --dry-run --env=""
 
-## Deployment model
+cd ../web
+npm ci
+npm run type-check
+npm run build
+```
 
-- `ogify.online` → Next.js/Vercel web application
-- `api.ogify.online` → Cloudflare Worker
-- Supabase → authentication + application data
-- Paddle → billing / Merchant of Record
-- Cloudflare KV → render cache, public generated PNGs, short-window rate counters, webhook idempotency keys
-- Cloudflare Browser Rendering → webpage screenshots
+See `FEATURE_MATRIX.md`, `DEVELOPER_PLATFORM.md`, `UI_UX_REFRESH.md`, and `PRODUCTION_READINESS.md` before deploying.
 
-## Compatibility principle
+## Advanced feature deployment
 
-Production-facing binary endpoints were preserved while new behavior was added under `/v1`. This keeps existing integrations stable while enabling crawler-safe public image URLs and composite rendering.
+See [`ADVANCED_FEATURES_DEPLOYMENT.md`](./ADVANCED_FEATURES_DEPLOYMENT.md) for the exact validation/deployment sequence, optional service-binding requirements, and known production boundaries.
