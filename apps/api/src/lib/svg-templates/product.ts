@@ -41,8 +41,8 @@ export function productTemplate({
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <defs>
     <style>
-      .font-display { font-family: 'Oswald', 'Liberation Sans Narrow', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; }
-      .font-mono    { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+      .font-display { font-family: 'Lato'; font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; }
+      .font-mono    { font-family: 'Liberation Mono'; }
     </style>
     <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
       <stop offset="0%" stop-color="#14181F" />

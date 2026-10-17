@@ -28,6 +28,11 @@
   "upload_source_maps": true,
   "rules": [
     {
+      "type": "Data",
+      "globs": ["**/*.ttf"],
+      "fallthrough": false
+    },
+    {
       "type": "CompiledWasm",
       "globs": ["**/*.wasm"],
       "fallthrough": false

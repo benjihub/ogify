@@ -7,9 +7,18 @@
  */
 import { Resvg, initWasm } from "@resvg/resvg-wasm";
 import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
+import latoRegular from "../../assets/fonts/Lato-Regular.ttf";
+import latoSemibold from "../../assets/fonts/Lato-Semibold.ttf";
+import liberationMonoRegular from "../../assets/fonts/LiberationMono-Regular.ttf";
 
 let initialized = false;
 let initialization: Promise<void> | undefined;
+
+const fontBuffers = [
+  new Uint8Array(latoRegular),
+  new Uint8Array(latoSemibold),
+  new Uint8Array(liberationMonoRegular),
+];
 
 async function initOnce(): Promise<void> {
   if (initialized) return;
@@ -37,7 +46,15 @@ export async function svgToPng(
   const resvg = new Resvg(svg, {
     fitTo: { mode: "width", value: width },
     background: "transparent",
-    font: { loadSystemFonts: false },
+    font: {
+      loadSystemFonts: false,
+      defaultFontFamily: "Lato",
+      sansSerifFamily: "Lato",
+      monospaceFamily: "Liberation Mono",
+      // `fontFiles` is filesystem-path based; Workers have no filesystem.
+      // Data imports must be supplied through Resvg's Worker-safe buffer API.
+      fontBuffers,
+    },
   });
 
   return resvg.render().asPng();
