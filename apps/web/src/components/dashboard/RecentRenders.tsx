@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { RenderLog } from "@/app/dashboard/page";
 
@@ -104,12 +105,7 @@ export function RecentRenders({ renders, totalRendersUsed }: RecentRendersProps)
         </div>
       )}
 
-      {/* Footer note */}
-      <p className="mt-4 font-mono text-[10px] text-line">
-        Showing last {renders.length} renders.{" "}
-        {/* TODO: link to full logs page once render_logs table is wired up */}
-        Full history coming soon.
-      </p>
+      <div className="mt-4 flex items-center justify-between gap-4 font-mono text-[10px] text-line"><span>Showing last {renders.length} renders.</span><Link href="/dashboard/renders" className="text-cinnabar hover:underline">View full history →</Link></div>
     </section>
   );
 }

@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             </p>
             <h1 className="text-4xl leading-tight text-paper">Privacy Policy</h1>
             <p className="max-w-2xl text-sm text-muted">
-              Last updated: June 30, 2026
+              Last updated: October 17, 2026
             </p>
           </header>
 
@@ -45,8 +45,7 @@ export default function PrivacyPage() {
               <li>To authenticate you and enforce rate limits.</li>
               <li>To show your plan details and usage statistics in your dashboard.</li>
               <li>
-                To send transactional emails (password reset, account confirmations)
-                via Resend.
+                To send account-related authentication emails through our authentication provider.
               </li>
               <li>
                 To improve the Service using aggregate usage trends, never
@@ -65,8 +64,7 @@ export default function PrivacyPage() {
             </p>
             <p>
               URL screenshots: The URL you provide is visited by a headless
-              browser. We cache the resulting screenshot for performance. We do
-              not permanently store the page content.
+              browser. We may cache the resulting screenshot briefly for performance. Versioned render endpoints can persist the generated PNG at a public image URL for social-crawler delivery; the page HTML itself is not stored.
             </p>
             <p>Generated images: You control where the output images are used.</p>
           </Section>
@@ -102,7 +100,7 @@ export default function PrivacyPage() {
                   <tr className="border-b border-line-dim">
                     <td className="py-3 pr-4">Supabase</td>
                     <td className="py-3 pr-4">Database & authentication</td>
-                    <td className="py-3">Email, hashed password, API key, usage count</td>
+                    <td className="py-3">Email, authentication data, API-key hash, usage count</td>
                   </tr>
                   <tr className="border-b border-line-dim">
                     <td className="py-3 pr-4">Cloudflare Workers</td>
@@ -113,11 +111,6 @@ export default function PrivacyPage() {
                     <td className="py-3 pr-4">Paddle</td>
                     <td className="py-3 pr-4">Payment processing</td>
                     <td className="py-3">Email, plan, subscription ID</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 pr-4">Resend</td>
-                    <td className="py-3 pr-4">Transactional emails</td>
-                    <td className="py-3">Email address</td>
                   </tr>
                 </tbody>
               </table>
@@ -136,7 +129,7 @@ export default function PrivacyPage() {
             <p>
               Depending on your location, you may have rights to access, correct,
               delete, or port your personal data. To exercise these rights, email
-              us at [your email]. We will respond within a reasonable timeframe.
+              us at support@ogify.online. We will respond within a reasonable timeframe.
             </p>
           </Section>
 
@@ -155,7 +148,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="10. Contact">
-            <p>For privacy concerns, contact: [your email]</p>
+            <p>For privacy concerns, contact: support@ogify.online</p>
           </Section>
 
           <div>

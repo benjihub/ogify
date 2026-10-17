@@ -33,6 +33,16 @@ export async function generateApiKey(): Promise<{ key: string; id: string }> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
+  const { count, error: countError } = await supabase
+    .from("api_keys")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .is("revoked_at", null);
+  if (countError) throw new Error(countError.message);
+  if ((count ?? 0) >= 10) {
+    throw new Error("You can have up to 10 active API keys. Revoke an old key before creating another.");
+  }
+
   // 24 random bytes → 48-char hex string
   const bytes = crypto.getRandomValues(new Uint8Array(24));
   const hex = Array.from(bytes)

@@ -105,9 +105,9 @@ export function TemplateGallery() {
       </div>
 
       <p className="mt-5 font-mono text-[10.5px] text-line">
-        More templates coming soon — Podcast, Social Metric, and Newsletter.
-        <a href="/docs" className="ml-2 text-cinnabar hover:underline">
-          Request a template →
+        Need a website-driven card? Use composite mode in Render Studio.
+        <a href="/docs/api-reference/render-composite" className="ml-2 text-cinnabar hover:underline">
+          Composite docs →
         </a>
       </p>
     </section>

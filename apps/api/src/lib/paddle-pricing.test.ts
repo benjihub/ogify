@@ -5,7 +5,7 @@ import {
   paddleUserIdFromCustomData,
   planFromPaddlePriceId,
   type PaddlePricingConfig,
-} from "./paddle-pricing.js";
+} from "./paddle-pricing.ts";
 
 const pricing: PaddlePricingConfig = {
   starterMonthly: "pri_starter_monthly",

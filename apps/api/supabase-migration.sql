@@ -24,6 +24,7 @@ create table if not exists public.api_keys (
 
 alter table public.api_keys
   add column if not exists key_preview text,
+  add column if not exists label text,
   add column if not exists last_used_at timestamptz;
 
 create index if not exists api_keys_user_id_idx on public.api_keys(user_id);
@@ -104,7 +105,7 @@ revoke execute on function public.increment_usage(uuid, text) from authenticated
 grant execute on function public.increment_usage(uuid, text) to service_role;
 
 
-── RLS policies ──────────────────────────────────────────────────────────
+-- ── RLS policies ──────────────────────────────────────────────────────────
 -- The Worker uses the SERVICE ROLE key, which bypasses RLS entirely.
 -- These policies protect data when using the anon key from the browser
 -- (e.g. in the Next.js dashboard).
@@ -115,29 +116,35 @@ alter table public.usage         enable row level security;
 alter table public.render_logs   enable row level security;
 
 -- api_keys: users can only see / manage their own keys
+drop policy if exists "api_keys: owner read" on public.api_keys;
 create policy "api_keys: owner read"
   on public.api_keys for select
   using (auth.uid() = user_id);
 
+drop policy if exists "api_keys: owner insert" on public.api_keys;
 create policy "api_keys: owner insert"
   on public.api_keys for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "api_keys: owner update" on public.api_keys;
 create policy "api_keys: owner update"
   on public.api_keys for update
   using (auth.uid() = user_id);
 
 -- subscriptions: users can only read their own subscription
+drop policy if exists "subscriptions: owner read" on public.subscriptions;
 create policy "subscriptions: owner read"
   on public.subscriptions for select
   using (auth.uid() = user_id);
 
 -- usage: users can only read their own usage
+drop policy if exists "usage: owner read" on public.usage;
 create policy "usage: owner read"
   on public.usage for select
   using (auth.uid() = user_id);
 
 -- render_logs: users can only read their own render history
+drop policy if exists "render_logs: owner read" on public.render_logs;
 create policy "render_logs: owner read"
   on public.render_logs for select
   using (auth.uid() = user_id);

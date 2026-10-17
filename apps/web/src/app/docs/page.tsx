@@ -14,8 +14,12 @@ export default function DocsPage() {
             ["Authentication", "/docs/authentication", "API keys, headers, rotation, and security."],
             ["Render template", "/docs/api-reference/render-template", "JSON body fields, responses, and errors."],
             ["Render URL", "/docs/api-reference/render-url", "Screenshot parameters, viewport, and caching."],
+            ["Render composite", "/docs/api-reference/render-composite", "Combine a live website capture with a branded social card."],
+            ["Public image URLs", "/docs/public-images", "Use generated immutable URLs directly in social metadata."],
             ["Templates", "/docs/templates", "Built-in template gallery and schemas."],
             ["Rate limits", "/docs/rate-limits", "Plan limits, usage checks, and 429 behavior."],
+            ["Next.js", "/docs/integrations/nextjs", "Use Ogify from server routes, builds, and metadata generation."],
+            ["Astro / static sites", "/docs/integrations/astro", "Generate public social images at build time."],
           ].map(([title, href, body]) => (
             <Link
               key={href}

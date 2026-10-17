@@ -1,37 +1,44 @@
-# Ogify — web app
+# Ogify Web App
 
-Next.js (App Router) + TypeScript + Tailwind CSS, with Supabase auth and
-Paddle billing wired up.
+Next.js + TypeScript + Tailwind + Supabase + Paddle frontend for Ogify.
 
-## Setup
+## Production areas
+
+- landing page with real rate-limited template playground
+- pricing / Paddle checkout
+- Supabase login/signup/session handling
+- dashboard key management and usage data
+- dashboard Render Studio for template/screenshot/composite requests
+- render history
+- API documentation
+- public examples
+- SEO landing pages
+- sitemap / robots / structured metadata
+- status page backed by the API health endpoint
+
+## Environment variables
 
 ```bash
-npm install
-cp .env.local.example .env.local
-# fill in Supabase + Paddle keys in .env.local
-npm run dev
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_API_URL=https://api.ogify.online
+NEXT_PUBLIC_PADDLE_ENV=production
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=
+NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY=
+NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY=
+NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY=
+NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY=
+NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_MONTHLY=
+NEXT_PUBLIC_PADDLE_PRICE_BUSINESS_YEARLY=
+NEXT_PUBLIC_PADDLE_PRICE_LIFETIME=
 ```
 
-## Structure
+Never expose Supabase service-role credentials or Paddle webhook secrets in the web app.
 
-- `src/app` — routes (landing page, login, signup, dashboard, pricing, docs)
-- `src/components` — UI primitives (`ui/`), layout chrome (`Layout/`), and
-  feature components (auth form, API key card, usage bar, Paddle checkout,
-  template playground)
-- `src/lib/supabase` — browser client, server client, and the middleware
-  session-refresh helper
-- `src/lib/paddle.ts` — Paddle.js initialisation + price ID map
-- `src/hooks/useUser.ts` — client hook exposing the current Supabase user
-- `src/middleware.ts` — redirects unauthenticated users away from
-  `/dashboard`, and authenticated users away from `/login` and `/signup`
+## Validation
 
-## Notes / TODOs
-
-- `src/app/dashboard/page.tsx` uses a mock API key generator — swap in a real
-  Supabase table + server action for issuing and revoking keys.
-- `src/components/PaddleCheckout.tsx` opens the Paddle overlay; you still
-  need a webhook handler (e.g. a route handler at
-  `src/app/api/paddle/webhook/route.ts`) to update plan/usage in Supabase
-  once a checkout completes.
-- Price IDs are read from `NEXT_PUBLIC_PADDLE_PRICE_*` env vars — create
-  these in your Paddle dashboard and paste the IDs into `.env.local`.
+```bash
+npm ci
+npm run type-check
+npm run build
+```

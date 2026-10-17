@@ -8,6 +8,7 @@ import { ApiKeysPanel } from "@/components/dashboard/ApiKeysPanel";
 import { BillingPanel } from "@/components/dashboard/BillingPanel";
 import { RecentRenders } from "@/components/dashboard/RecentRenders";
 import { TemplateGallery } from "@/components/dashboard/TemplateGallery";
+import { RenderStudio } from "@/components/dashboard/RenderStudio";
 
 // ── Shared types (used by child components) ───────────────────────────────
 
@@ -129,11 +130,12 @@ export default async function DashboardPage() {
         .gte("created_at", thirtyDaysAgo.toISOString()),
     ]);
 
+  const subscriptionActive = subRow?.status === "active";
   const subscription: SubscriptionDisplay = {
-    plan:             (subRow?.plan as PlanId) ?? "free",
-    rendersLimit:     subRow?.renders_limit ?? 100,
+    plan:             subscriptionActive ? ((subRow?.plan as PlanId) ?? "free") : "free",
+    rendersLimit:     subscriptionActive ? (subRow?.renders_limit ?? 100) : 100,
     status:           subRow?.status ?? "active",
-    currentPeriodEnd: subRow?.current_period_end ?? null,
+    currentPeriodEnd: subscriptionActive ? (subRow?.current_period_end ?? null) : null,
   };
 
   const rendersUsed = usageRow?.renders_used ?? 0;
@@ -185,6 +187,9 @@ export default async function DashboardPage() {
         isNewUser={isNewUser}
         keyPreview={apiKeys[0]?.keyPreview ?? null}
       />
+
+      {/* ── Render studio ──────────────────────────────── */}
+      <RenderStudio />
 
       {/* ── Usage chart ────────────────────────────────── */}
       <UsageChart

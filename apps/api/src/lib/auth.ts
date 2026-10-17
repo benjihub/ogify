@@ -42,9 +42,9 @@ export function nextResetDate(): string {
 export async function validateApiKey(
   rawKey: string,
   supabase: SupabaseClient
-): Promise<{ ctx: AuthContext } | { error: string; status: 401 | 403 }> {
+): Promise<{ ctx: AuthContext } | { error: string; status: 401 | 403 | 429; code: string }> {
   if (!rawKey || rawKey.length < 10) {
-    return { error: "Missing or malformed API key.", status: 401 };
+    return { error: "Missing or malformed API key.", status: 401, code: "INVALID_API_KEY" };
   }
 
   const keyHash = await sha256(rawKey);
@@ -57,11 +57,11 @@ export async function validateApiKey(
     .single<ApiKeyRow>();
 
   if (keyErr || !keyRow) {
-    return { error: "Invalid API key.", status: 401 };
+    return { error: "Invalid API key.", status: 401, code: "INVALID_API_KEY" };
   }
 
   if (keyRow.revoked_at !== null) {
-    return { error: "API key has been revoked.", status: 401 };
+    return { error: "API key has been revoked.", status: 401, code: "REVOKED_API_KEY" };
   }
 
   const userId = keyRow.user_id;
@@ -73,8 +73,9 @@ export async function validateApiKey(
     .eq("user_id", userId)
     .single<Pick<SubscriptionRow, "plan" | "renders_limit" | "status">>();
 
-  const plan: PlanId = sub?.status === "active" ? (sub.plan as PlanId) : "free";
-  const rendersLimit = sub?.renders_limit ?? PLAN_LIMITS.free;
+  const subscriptionActive = sub?.status === "active";
+  const plan: PlanId = subscriptionActive ? (sub.plan as PlanId) : "free";
+  const rendersLimit = subscriptionActive ? (sub?.renders_limit ?? PLAN_LIMITS.free) : PLAN_LIMITS.free;
 
   // 3. Fetch current-month usage (upsert the row if first use this period)
   const period = currentPeriod();
@@ -87,7 +88,7 @@ export async function validateApiKey(
 
   if (usageErr && usageErr.code !== "PGRST116") {
     // PGRST116 = "Row not found" — fine for a new period, anything else is a DB error
-    return { error: "Could not retrieve usage data.", status: 403 };
+    return { error: "Could not retrieve usage data.", status: 403, code: "USAGE_LOOKUP_FAILED" };
   }
 
   const rendersUsed = usageRow?.renders_used ?? 0;
@@ -95,7 +96,8 @@ export async function validateApiKey(
   if (rendersUsed >= rendersLimit) {
     return {
       error: `Monthly render limit reached (${rendersUsed}/${rendersLimit}). Upgrade your plan to continue.`,
-      status: 403,
+      status: 429,
+      code: "MONTHLY_QUOTA_EXCEEDED",
     };
   }
 

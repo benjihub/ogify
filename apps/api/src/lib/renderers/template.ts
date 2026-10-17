@@ -1,23 +1,23 @@
 /**
  * SVG → PNG rendering via @resvg/resvg-wasm.
  *
- * The WASM module must be initialised once before use. Cloudflare Workers
- * require the module to be bundled and precompiled rather than dynamically
- * compiled from fetched bytes.
+ * Cloudflare Workers require WASM to be bundled as a precompiled module.
+ * Fonts are sourced from Fontsource npm packages at install/build time and
+ * bundled by Wrangler as Data modules; no runtime network fetch is used.
  */
 import { Resvg, initWasm } from "@resvg/resvg-wasm";
 import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
-import latoRegular from "../../assets/fonts/Lato-Regular.ttf";
-import latoSemibold from "../../assets/fonts/Lato-Semibold.ttf";
-import liberationMonoRegular from "../../assets/fonts/LiberationMono-Regular.ttf";
+import interRegular from "@fontsource/inter/files/inter-latin-400-normal.woff2";
+import interSemibold from "@fontsource/inter/files/inter-latin-600-normal.woff2";
+import jetbrainsMonoRegular from "@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2";
 
 let initialized = false;
 let initialization: Promise<void> | undefined;
 
 const fontBuffers = [
-  new Uint8Array(latoRegular),
-  new Uint8Array(latoSemibold),
-  new Uint8Array(liberationMonoRegular),
+  new Uint8Array(interRegular),
+  new Uint8Array(interSemibold),
+  new Uint8Array(jetbrainsMonoRegular),
 ];
 
 async function initOnce(): Promise<void> {
@@ -34,9 +34,7 @@ export interface SvgToPngOptions {
   height?: number;
 }
 
-/**
- * Converts an SVG string to a PNG `Uint8Array`.
- */
+/** Converts a self-contained SVG string to PNG bytes. */
 export async function svgToPng(
   svg: string,
   { width = 1200, height = 630 }: SvgToPngOptions = {}
@@ -48,11 +46,9 @@ export async function svgToPng(
     background: "transparent",
     font: {
       loadSystemFonts: false,
-      defaultFontFamily: "Lato",
-      sansSerifFamily: "Lato",
-      monospaceFamily: "Liberation Mono",
-      // `fontFiles` is filesystem-path based; Workers have no filesystem.
-      // Data imports must be supplied through Resvg's Worker-safe buffer API.
+      defaultFontFamily: "Inter",
+      sansSerifFamily: "Inter",
+      monospaceFamily: "JetBrains Mono",
       fontBuffers,
     },
   });
@@ -60,11 +56,7 @@ export async function svgToPng(
   return resvg.render().asPng();
 }
 
-// ── Cache-key helper ──────────────────────────────────────────────────────
-
-/**
- * Derives a deterministic hex cache key from the render inputs.
- */
+/** Derives a deterministic SHA-256 hex cache key from render inputs. */
 export async function cacheKey(payload: unknown): Promise<string> {
   const json = JSON.stringify(payload);
   const buf = await crypto.subtle.digest(

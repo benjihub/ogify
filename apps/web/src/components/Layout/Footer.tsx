@@ -23,14 +23,17 @@ export function Footer() {
               { label: "Features", href: "/#features" },
               { label: "Pricing", href: "/pricing" },
               { label: "Docs", href: "/docs" },
+              { label: "Examples", href: "/examples" },
             ]}
           />
           <FooterCol
             heading="Resources"
             links={[
-              { label: "Blog", href: "#" },
-              { label: "GitHub", href: "#" },
-              { label: "Community Discord", href: "#" },
+              { label: "Open Graph API", href: "/open-graph-image-api" },
+              { label: "Screenshot API", href: "/website-screenshot-api" },
+              { label: "GitHub", href: "https://github.com/benjihub/ogify" },
+              { label: "Status", href: "/status" },
+              { label: "Support", href: "mailto:support@ogify.online" },
             ]}
           />
           <FooterCol
@@ -44,7 +47,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-line-dim pt-6">
           <span className="font-mono text-xs text-line">
-            Ogify — bootstrapped with $100.
+            Ogify — social image infrastructure for developers.
           </span>
           <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-line">
             Paddle — merchant of record

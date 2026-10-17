@@ -1,165 +1,133 @@
 # Ogify API — Cloudflare Worker
 
-Hono + TypeScript on Cloudflare Workers. Renders SVG templates and URL
-screenshots to PNG via `resvg-wasm` and Browser Rendering.
+Hono + TypeScript API for social-card templates, website screenshots, composite images, public image delivery, usage tracking, and Paddle webhooks.
 
----
-
-## Setup
+## Local setup
 
 ```bash
-npm install
-cp .dev.vars.example .dev.vars   # fill in Supabase + Paddle secrets
-npm run dev                       # wrangler dev --env dev
+npm ci
+cp .dev.vars.example .dev.vars  # then fill in local values
+npm run dev
 ```
 
----
+Required Worker secrets:
 
-## Deploy
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `PADDLE_WEBHOOK_SECRET`
+- `CACHE_SIGNING_KEY` (reserved for signed-delivery evolution; keep configured)
 
-```bash
-# One-time: create KV namespace and paste the IDs into wrangler.toml
-wrangler kv:namespace create CACHE
-wrangler kv:namespace create CACHE --preview
+Normal Worker variables include `SUPABASE_URL`, `OGIFY_ENV`, and the seven Paddle price IDs.
 
-# One-time: create R2 bucket
-wrangler r2 bucket create ogify-renders
-
-# Set production secrets
-wrangler secret put SUPABASE_URL
-wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-wrangler secret put PADDLE_WEBHOOK_SECRET
-wrangler secret put CACHE_SIGNING_KEY
-
-# Deploy
-npm run deploy
-```
-
----
-
-## Supabase
-
-Run `supabase-migration.sql` once in the SQL editor.  It creates:
-
-| Table | Purpose |
-|---|---|
-| `api_keys` | SHA-256 hashes of issued API keys |
-| `subscriptions` | Per-user plan, Paddle IDs, status |
-| `usage` | Per-user per-month render counts |
-
-Plus a `increment_usage(p_user_id, p_period)` RPC called after every render.
-
----
-
-## API reference
-
-All render endpoints require the header:
-```
-x-api-key: ogfy_live_...
-```
+## Stable binary API
 
 ### `POST /render/template`
 
+Returns PNG bytes directly.
+
 ```json
 {
-  "template": "blog",       // "blog" | "product" | "saas"
-  "title":    "My Post",    // required, max 80 chars
-  "author":   "Jane · site.com",  // optional
-  "tag":      "Tutorial",   // optional eyebrow label
-  "width":    1200,         // optional, 200–2400
-  "height":   630           // optional, 100–1400
+  "template": "blog",
+  "title": "My Post",
+  "author": "Your Name · site.com",
+  "tag": "Tutorial",
+  "brand": "Acme",
+  "accent_color": "#C73E1D",
+  "background_color": "#171E26",
+  "width": 1200,
+  "height": 630
 }
 ```
-
-Returns `image/png`. Cached in KV indefinitely (content-addressed).
-
-**Response headers**
-
-| Header | Value |
-|---|---|
-| `X-Cache` | `HIT` or `MISS` |
-| `X-Renders-Used` | renders consumed this month |
-| `X-Renders-Limit` | monthly limit for this plan |
-
----
 
 ### `POST /render/url`
 
-```json
-{
-  "url":             "https://yoursite.com/blog/my-post",
-  "viewport_width":  1200,   // optional, default 1200
-  "viewport_height": 630,    // optional, default 630
-  "delay":           500     // optional ms, max 5000
-}
-```
-
-Returns `image/png`. **Not cached** (page content may change).
-Requires Workers Paid plan for the Browser Rendering binding.
-
----
-
-### `GET /me/usage`
+Returns screenshot PNG bytes directly.
 
 ```json
 {
-  "plan":              "starter",
-  "renders_used":      47,
-  "renders_limit":     500,
-  "renders_remaining": 453,
-  "period":            "2024-11",
-  "resets_on":         "2024-12-01"
+  "url": "https://example.com",
+  "viewport_width": 1200,
+  "viewport_height": 630,
+  "delay": 500,
+  "wait_until": "networkidle0"
 }
 ```
 
----
+## Versioned API
 
-### `POST /webhooks/paddle`
+The `/v1` render endpoints return JSON with an immutable public PNG URL.
 
-Registered in the Paddle dashboard as your notification URL.
-Verifies `Paddle-Signature`, then processes:
+### `POST /v1/render/template`
 
-| Event | Action |
-|---|---|
-| `subscription.activated` | upsert subscription row, set plan + limit |
-| `subscription.updated` | update plan / limit |
-| `subscription.cancelled` | mark status = `cancelled` |
-| `subscription.paused` | mark status = `paused` |
-| `transaction.completed` | detect lifetime purchase, upsert subscription |
+### `POST /v1/render/url`
 
-Paddle must include `custom_data: { user_id: "<supabase-auth-uid>" }` on
-every checkout — set this via Paddle's `custom_data` field when opening the
-overlay in `PaddleCheckout.tsx`.
+### `POST /v1/render/composite`
 
----
-
-### `GET /health`
-
-```json
-{ "status": "ok", "env": "production", "ts": "2024-11-01T12:00:00.000Z" }
-```
-
-No auth required.
-
----
-
-## Error format
-
-All errors return JSON:
+Example response:
 
 ```json
 {
-  "error": "Monthly render limit reached (100/100). Upgrade your plan to continue.",
-  "code":  "AUTH_ERROR"
+  "id": "content-hash-id",
+  "image_url": "https://api.ogify.online/i/content-hash-id.png",
+  "content_type": "image/png",
+  "width": 1200,
+  "height": 630,
+  "cache": "MISS",
+  "renders_used": 1,
+  "renders_limit": 100
 }
 ```
 
-| Code | Meaning |
-|---|---|
-| `AUTH_ERROR` | Missing / invalid / revoked API key, or limit reached |
-| `VALIDATION_ERROR` | Bad request body |
-| `FORBIDDEN` | SSRF-blocked URL |
-| `RENDER_ERROR` | resvg-wasm failure |
-| `SCREENSHOT_ERROR` | Puppeteer failure |
-| `INTERNAL_ERROR` | Unhandled exception |
-| `NOT_FOUND` | Unknown route |
+### `GET /v1/me/usage`
+
+Returns current plan and monthly usage.
+
+## Public images
+
+`GET /i/:id.png` requires no API key so social crawlers can fetch generated images. Public IDs are content hashes, and responses use immutable cache headers.
+
+Public image bytes use the existing Cloudflare KV binding in this build, avoiding a new production binding. R2 can be introduced later behind the same public URL contract.
+
+## Demo renderer
+
+`POST /demo/render/template` is unauthenticated but strongly rate-limited by client IP and fixed to a standard 1200×630 output. It powers the public website playground.
+
+## Request controls
+
+Authenticated requests return short-window rate-limit headers:
+
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+- `Retry-After` on 429s
+
+All API responses receive an `X-Request-Id`. JSON errors include `request_id`.
+
+## Screenshot safety
+
+- initial targets must be public `http`/`https` URLs
+- common local/private/link-local targets are blocked
+- intercepted browser requests to direct private/local hosts are aborted
+- viewport and delay values are bounded
+- streaming media/websocket requests are skipped
+- fonts and normal image assets remain enabled so captures more closely match real pages
+
+## Paddle
+
+`POST /webhooks/paddle` verifies Paddle signatures, rejects stale signatures, maps exact configured price IDs, and uses KV event IDs for webhook idempotency when Paddle supplies an `event_id`.
+
+Handled events include:
+
+- `subscription.activated`
+- `subscription.updated`
+- `subscription.resumed`
+- `subscription.cancelled`
+- `subscription.paused`
+- `transaction.completed` for configured lifetime purchases
+
+## Validation
+
+```bash
+npm run type-check
+npm test
+npx wrangler deploy --dry-run --env=""
+```

@@ -7,8 +7,13 @@ const DOC_LINKS: DocLink[] = [
   { href: "/docs/authentication", label: "Authentication" },
   { href: "/docs/api-reference/render-template", label: "Render template" },
   { href: "/docs/api-reference/render-url", label: "Render URL" },
+  { href: "/docs/api-reference/render-composite", label: "Render composite" },
+  { href: "/docs/public-images", label: "Public image URLs" },
   { href: "/docs/templates", label: "Templates" },
   { href: "/docs/rate-limits", label: "Rate limits" },
+  { href: "/docs/integrations/nextjs", label: "Next.js" },
+  { href: "/docs/integrations/astro", label: "Astro / static sites" },
+  { href: "/docs/integrations/ci-cd", label: "CI/CD" },
 ];
 
 export function DocsShell({

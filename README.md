@@ -1,64 +1,71 @@
 # Ogify
 
-Generate Open Graph images and website screenshots through a developer-friendly API.
+Ogify turns structured content and public URLs into share-ready PNGs through a developer-friendly API.
 
-Ogify is a SaaS platform for creating social preview images programmatically. It combines a Next.js web application with a Cloudflare Worker rendering API, authentication, storage and subscription billing.
+## Production capabilities
 
-## Features
+- Built-in Open Graph/social-card templates (`blog`, `product`, `saas`)
+- Website screenshot rendering with Cloudflare Browser Rendering
+- Composite rendering: live website screenshot + branded social-card layout
+- Immutable public PNG URLs for `og:image`, Twitter cards, Slack, Discord, and CMS integrations
+- API-key authentication backed by Supabase
+- Monthly usage quotas and best-effort edge burst limits
+- Edge caching for templates and screenshots
+- Dashboard with key management, usage, render history, billing, and a render studio
+- Paddle billing/webhook handling with exact price mapping and webhook idempotency
+- Live public template playground with a tightly rate-limited demo endpoint
+- OpenAPI discovery at `https://api.ogify.online/openapi.json`
+- SEO landing pages, sitemap, robots metadata, and structured data
 
-- Open Graph image generation
-- Template-based rendering
-- Website screenshot generation
-- Developer API
-- API-key authentication
-- Documentation interface
-- User authentication
-- Subscription billing
-- Supabase-backed application data
-- Cloudflare-based rendering infrastructure
+## Repository structure
 
-## Technology
+- `apps/web` — Next.js customer application, dashboard, pricing, docs, SEO pages
+- `apps/api` — Hono + Cloudflare Worker rendering API
+- `packages/shared` — shared API response types
+- `.github/workflows/ci.yml` — API/web CI validation
 
-### Web Application
+## API endpoints
 
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- Supabase
-- Paddle
+### Existing binary endpoints
 
-### Rendering API
+- `POST /render/template` → `image/png`
+- `POST /render/url` → `image/png`
+- `GET /me/usage` → JSON
 
-- Hono
-- TypeScript
-- Cloudflare Workers
-- Cloudflare Puppeteer
-- Resvg WASM
-- Supabase
+These remain for backward compatibility.
 
-## Repository Structure
+### Versioned endpoints
 
-- `apps/web` — Next.js customer-facing application
-- `apps/api` — Cloudflare Worker rendering API
-- `packages/shared` — shared TypeScript types
-- `turbo.json` — monorepo task configuration
+- `POST /v1/render/template` → JSON with immutable `image_url`
+- `POST /v1/render/url` → JSON with immutable `image_url`
+- `POST /v1/render/composite` → JSON with immutable `image_url`
+- `GET /v1/me/usage` → JSON
+- `GET /i/:id.png` → public generated PNG
 
-## Architecture
+### Public/product endpoints
 
-The web application handles authentication, billing, account management and product documentation.
-
-The Cloudflare Worker API handles image rendering and website screenshot generation.
-
-Shared contracts and types are maintained in the shared workspace.
+- `GET /health`
+- `GET /openapi.json`
+- `POST /demo/render/template` — restricted public demo renderer
+- `POST /webhooks/paddle`
 
 ## Development
 
-Development instructions are available in:
+See:
 
 - `apps/web/README.md`
 - `apps/api/README.md`
+- `PRODUCTION_READINESS.md`
 
-## Product Goal
+## Deployment model
 
-Ogify is designed for developers and teams that need consistent social preview images without maintaining their own screenshot or image-rendering infrastructure.
+- `ogify.online` → Next.js/Vercel web application
+- `api.ogify.online` → Cloudflare Worker
+- Supabase → authentication + application data
+- Paddle → billing / Merchant of Record
+- Cloudflare KV → render cache, public generated PNGs, short-window rate counters, webhook idempotency keys
+- Cloudflare Browser Rendering → webpage screenshots
+
+## Compatibility principle
+
+Production-facing binary endpoints were preserved while new behavior was added under `/v1`. This keeps existing integrations stable while enabling crawler-safe public image URLs and composite rendering.

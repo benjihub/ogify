@@ -6,7 +6,7 @@ export interface Env {
   PADDLE_WEBHOOK_SECRET: string;
   CACHE_SIGNING_KEY: string;
 
-  // Non-secret vars (wrangler.jsonc [vars] or Cloudflare dashboard)
+  // Non-secret vars (wrangler.jsonc vars or Cloudflare dashboard)
   OGIFY_ENV: "development" | "staging" | "production";
   PADDLE_PRICE_STARTER_MONTHLY: string;
   PADDLE_PRICE_STARTER_YEARLY: string;
@@ -17,21 +17,13 @@ export interface Env {
   PADDLE_PRICE_LIFETIME: string;
 
   // Cloudflare bindings
-  CACHE: KVNamespace;     // render cache
-  RENDERS: R2Bucket;      // persistent image storage
-  BROWSER: Fetcher;       // Browser Rendering (Puppeteer)
+  CACHE: KVNamespace;
+  /** Optional future persistent storage binding. Production does not require it. */
+  RENDERS?: R2Bucket;
+  BROWSER: Fetcher;
 }
 
 // ── Supabase row shapes ───────────────────────────────────────────────────
-
-/**
- * Table: api_keys
- * id            uuid primary key default gen_random_uuid()
- * user_id       uuid references auth.users(id)
- * key_hash      text unique not null          -- SHA-256 hex of the raw key
- * created_at    timestamptz default now()
- * revoked_at    timestamptz                   -- null = active
- */
 export interface ApiKeyRow {
   id: string;
   user_id: string;
@@ -40,18 +32,6 @@ export interface ApiKeyRow {
   revoked_at: string | null;
 }
 
-/**
- * Table: subscriptions
- * id                    uuid primary key default gen_random_uuid()
- * user_id               uuid unique references auth.users(id)
- * plan                  text not null default 'free'
- * renders_limit         int  not null default 100
- * paddle_subscription_id text
- * paddle_customer_id    text
- * status                text not null default 'active'  -- active | cancelled | paused
- * current_period_end    timestamptz
- * updated_at            timestamptz default now()
- */
 export interface SubscriptionRow {
   id: string;
   user_id: string;
@@ -64,14 +44,6 @@ export interface SubscriptionRow {
   updated_at: string;
 }
 
-/**
- * Table: usage
- * id            uuid primary key default gen_random_uuid()
- * user_id       uuid references auth.users(id)
- * period        text not null    -- format: YYYY-MM
- * renders_used  int  not null default 0
- * unique(user_id, period)
- */
 export interface UsageRow {
   id: string;
   user_id: string;
@@ -80,7 +52,6 @@ export interface UsageRow {
 }
 
 // ── Domain types ──────────────────────────────────────────────────────────
-
 export type PlanId = "free" | "starter" | "pro" | "business" | "lifetime";
 
 export const PLAN_LIMITS: Record<PlanId, number> = {
@@ -91,31 +62,58 @@ export const PLAN_LIMITS: Record<PlanId, number> = {
   lifetime: 5_000,
 };
 
+export const PLAN_RATE_LIMITS_PER_MINUTE: Record<PlanId, number> = {
+  free: 30,
+  starter: 60,
+  pro: 180,
+  business: 600,
+  lifetime: 180,
+};
+
 export type TemplateId = "blog" | "product" | "saas";
+export type ScreenshotWaitUntil = "load" | "domcontentloaded" | "networkidle0";
 
 // ── Request / response bodies ─────────────────────────────────────────────
-
 export interface TemplateRenderRequest {
   template: TemplateId;
   title: string;
   author?: string;
   tag?: string;
-  /** Public image URL to embed in the card (optional) */
-  image_url?: string;
-  /** Output dimensions — default 1200 × 630 */
+  /** Optional brand label used in template marks on paid plans. */
+  brand?: string;
+  /** Optional #RRGGBB accent override. */
+  accent_color?: string;
+  /** Optional #RRGGBB background override. */
+  background_color?: string;
+  /** Output dimensions — default 1200 × 630. */
   width?: number;
   height?: number;
 }
 
 export interface ScreenshotRequest {
-  /** Fully-qualified public URL to capture */
+  /** Fully-qualified public URL to capture. */
   url: string;
-  /** Viewport width for the browser — default 1200 */
+  /** Viewport width — default 1200, range 320–2400. */
   viewport_width?: number;
-  /** Viewport height for the browser — default 630 */
+  /** Viewport height — default 630, range 240–1800. */
   viewport_height?: number;
-  /** Milliseconds to wait after navigation before capture — default 500 */
+  /** Milliseconds to wait after navigation — default 0, max 5000. */
   delay?: number;
+  /** Browser navigation strategy. */
+  wait_until?: ScreenshotWaitUntil;
+}
+
+export interface CompositeRenderRequest extends ScreenshotRequest {
+  /** Headline displayed with the live website capture. */
+  title: string;
+  author?: string;
+  tag?: string;
+  brand?: string;
+  accent_color?: string;
+  background_color?: string;
+  /** Final output size. Defaults to 1200 × 630. */
+  width?: number;
+  height?: number;
 }
 
 export interface UsageResponse {
@@ -124,12 +122,21 @@ export interface UsageResponse {
   renders_limit: number;
   renders_remaining: number;
   period: string;
-  resets_on: string; // ISO date of the first day of next month
+  resets_on: string;
+}
+
+export interface PublicRenderResponse {
+  id: string;
+  image_url: string;
+  content_type: "image/png";
+  width: number;
+  height: number;
+  cache: "HIT" | "MISS";
+  renders_used: number;
+  renders_limit: number;
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────
-
-/** Attached to Hono context after auth middleware validates an API key */
 export interface AuthContext {
   userId: string;
   apiKeyId: string;
@@ -141,5 +148,5 @@ export interface AuthContext {
 export interface ErrorResponse {
   error: string;
   code: string;
-  status: number;
+  request_id?: string;
 }

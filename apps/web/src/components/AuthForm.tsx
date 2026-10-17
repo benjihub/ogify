@@ -29,9 +29,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     setSuccess(null);
     setLoading(true);
 
-    const redirectTo =
+    const requestedRedirect =
       new URLSearchParams(window.location.search).get("redirectTo") ??
       "/dashboard";
+    const redirectTo =
+      requestedRedirect.startsWith("/") && !requestedRedirect.startsWith("//")
+        ? requestedRedirect
+        : "/dashboard";
 
     const { data, error: authError } =
       mode === "login"

@@ -119,15 +119,9 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
         )}
 
         {plan !== "free" && !isLifetime && (
-          <a
-            href="https://customer.paddle.com/portal"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded border border-line py-2.5 font-mono text-xs uppercase tracking-wide text-muted hover:border-fg hover:text-fg"
-          >
-            Manage billing →
-            <span className="font-mono text-[10px] text-line">(Paddle portal)</span>
-          </a>
+          <p className="rounded border border-line px-3 py-2.5 text-center font-mono text-[11px] leading-relaxed text-muted">
+            Manage or cancel billing from the secure Paddle customer-portal link in your purchase receipt or Paddle email.
+          </p>
         )}
 
         {plan === "free" && (
@@ -144,13 +138,13 @@ export function BillingPanel({ subscription, userEmail }: BillingPanelProps) {
 }
 
 function getPlanFeatures(plan: PlanId): string[] {
-  const base = ["All templates", "URL screenshot mode", "Edge caching"];
+  const base = ["Built-in templates", "URL screenshot mode", "Composite rendering", "Public image URLs"];
   const map: Record<PlanId, string[]> = {
-    free:     [...base, "Ogify watermark", "100 renders / month"],
-    starter:  [...base, "No watermark", "Priority support", "500 renders / month"],
-    pro:      [...base, "No watermark", "White-label option", "Priority support", "2,000 renders / month"],
-    business: [...base, "No watermark", "Custom templates", "Dedicated support", "10,000 renders / month"],
-    lifetime: [...base, "No watermark", "White-label option", "5,000 renders / month", "All future templates"],
+    free:     [...base, "Ogify template branding", "100 renders / month"],
+    starter:  [...base, "No Ogify template branding", "500 renders / month"],
+    pro:      [...base, "No Ogify template branding", "180 requests / minute burst limit", "2,000 renders / month"],
+    business: [...base, "No Ogify template branding", "600 requests / minute burst limit", "10,000 renders / month"],
+    lifetime: [...base, "No Ogify template branding", "180 requests / minute burst limit", "5,000 renders / month"],
   };
   return map[plan] ?? base;
 }

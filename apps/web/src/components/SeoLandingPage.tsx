@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { Header } from "@/components/Layout/Header";
+import { Footer } from "@/components/Layout/Footer";
+import { Button } from "@/components/ui/button";
+
+export function SeoLandingPage({ eyebrow, title, description, bullets, code, secondaryTitle, secondaryBody }: { eyebrow: string; title: string; description: string; bullets: string[]; code: string; secondaryTitle: string; secondaryBody: string }) {
+  return <><Header /><main><section className="mx-auto max-w-6xl px-7 py-24"><div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]"><div><div className="font-mono text-xs uppercase tracking-[0.16em] text-gold">{eyebrow}</div><h1 className="mt-4 text-[46px] leading-[1.08] text-paper">{title}</h1><p className="mt-5 max-w-xl text-[17px] leading-8 text-muted">{description}</p><div className="mt-8 flex gap-3"><Link href="/signup"><Button variant="primary">Start free</Button></Link><Link href="/docs"><Button variant="ghost">Read docs</Button></Link></div></div><pre className="code-card h-fit overflow-x-auto text-[12px]">{code}</pre></div></section><section className="border-t border-line-dim py-20"><div className="mx-auto grid max-w-6xl gap-10 px-7 lg:grid-cols-2"><div><h2 className="text-3xl text-paper">{secondaryTitle}</h2><p className="mt-4 text-base leading-7 text-muted">{secondaryBody}</p></div><ul className="space-y-4">{bullets.map(item=><li key={item} className="flex gap-3 rounded border border-line-dim bg-ink-soft p-4 text-sm leading-6 text-muted"><span className="mt-2 h-1.5 w-1.5 shrink-0 bg-cinnabar" />{item}</li>)}</ul></div></section></main><Footer /></>;
+}

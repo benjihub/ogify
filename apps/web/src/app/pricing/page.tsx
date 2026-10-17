@@ -51,8 +51,9 @@ const PLANS: {
     features: [
       "All templates",
       "URL screenshot mode",
-      "Ogify watermark",
-      "Community support",
+      "Composite rendering",
+      "Public image URLs",
+      "Ogify template branding",
     ],
     cta: "Get started",
   },
@@ -65,10 +66,10 @@ const PLANS: {
     },
     renders: "500 renders/month",
     features: [
-      "No watermark",
-      "Priority support",
-      "URL screenshot mode",
-      "Higher rate limit",
+      "No Ogify template branding",
+      "60 requests/min burst limit",
+      "Composite rendering",
+      "Public image URLs",
     ],
     cta: "Upgrade",
   },
@@ -81,10 +82,10 @@ const PLANS: {
     },
     renders: "2,000 renders/month",
     features: [
-      "No watermark",
-      "White-label option",
-      "Custom templates",
-      "Higher rate limit",
+      "No Ogify template branding",
+      "180 requests/min burst limit",
+      "Composite rendering",
+      "Public image URLs",
     ],
     cta: "Upgrade",
     popular: true,
@@ -98,22 +99,22 @@ const PLANS: {
     },
     renders: "10,000 renders/month",
     features: [
-      "No watermark",
-      "White-label option",
-      "Custom templates",
-      "Dedicated support",
+      "No Ogify template branding",
+      "600 requests/min burst limit",
+      "Composite rendering",
+      "Public image URLs",
     ],
     cta: "Upgrade",
   },
 ];
 
 const INCLUDED = [
-  "All templates: Blog, Product, SaaS, and more",
-  "URL screenshot mode",
-  "Fast edge caching with Cloudflare CDN",
+  "Built-in Blog, Product, and SaaS templates",
+  "URL screenshot and composite modes",
+  "Immutable public image URLs",
+  "Cloudflare edge caching",
   "Paddle-handled billing and global tax",
-  "API key management and usage dashboard",
-  "Open-source <OgImage> React component",
+  "API key management, usage dashboard, and rate-limit headers",
 ];
 
 const FAQS = [
@@ -129,7 +130,7 @@ const FAQS = [
   {
     question: "What happens when I hit my render limit?",
     answer:
-      "Ogify returns a 429 status and notifies you. You can upgrade instantly, or wait until the next monthly reset.",
+      "Ogify returns HTTP 429 with a machine-readable error code. You can upgrade immediately or wait until the next monthly reset.",
   },
   {
     question: "Can I cancel anytime?",
@@ -142,9 +143,9 @@ const FAQS = [
       "Absolutely. It is just an HTTP API, so it works with Hugo, Astro, Jekyll, 11ty, and any CI/CD pipeline.",
   },
   {
-    question: "Is there a white-label / agency plan?",
+    question: "Can paid plans remove Ogify template branding?",
     answer:
-      "Pro and Business support white-label use cases, including custom watermark and CNAME options. For bigger needs, contact us.",
+      "Yes. Paid-plan template renders replace the Ogify template mark with your optional brand label or a neutral rendered mark.",
   },
 ];
 
@@ -214,7 +215,9 @@ export default function PricingPage() {
               Open Graph implementation
             </p>
             <pre className="code-card mt-3 text-[12px]">
-              {`<meta property="og:image" content="https://api.ogify.online/render/template?template=blog&title=Launch" />`}
+              {`// Render once on your server/CI with POST /v1/render/template
+// Then use the returned immutable URL:
+<meta property="og:image" content="https://api.ogify.online/i/IMAGE_ID.png" />`}
             </pre>
           </div>
         </section>
@@ -259,7 +262,7 @@ export default function PricingPage() {
               Need more than 10,000 renders?
             </p>
             <Link
-              href="mailto:hello@ogify.dev"
+              href="mailto:support@ogify.online"
               className="font-mono text-[12.5px] uppercase tracking-wide text-cinnabar hover:underline"
             >
               Contact us for custom Enterprise pricing
@@ -344,14 +347,13 @@ function FounderLicenseCard() {
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
           <div className="mb-3 w-fit rounded border border-gold bg-gold/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-gold">
-            Founder&apos;s License · Only 50 available
+            Founder&apos;s License · one-time purchase
           </div>
           <h2 className="text-[28px] leading-tight text-paper">
             $99 once · lifetime access
           </h2>
           <p className="mt-3 text-sm leading-7 text-muted">
-            5,000 renders/month forever, all Pro features included, and public
-            launch pricing locked in.
+            5,000 renders/month, paid-plan branding controls, screenshots, composites, and public image URLs.
           </p>
         </div>
         <PaddleCheckout plan="lifetime" className="w-full md:w-auto">

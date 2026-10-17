@@ -18,7 +18,7 @@ const FAQS = [
   },
   {
     q: "Is there a free plan?",
-    a: "Yes — 100 renders a month, forever.",
+    a: "Yes — the current Free plan includes 100 renders per month.",
   },
   {
     q: "Do I need a credit card to start?",

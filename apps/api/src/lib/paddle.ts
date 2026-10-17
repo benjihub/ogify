@@ -48,17 +48,14 @@ export async function verifyPaddleWebhook(
 
   const body = await request.text();
 
-  // Parse ts= and h1= from the header
-  const parts = Object.fromEntries(
-    signatureHeader.split(";").map((part) => {
-      const [k, v] = part.split("=");
-      return [k, v];
-    })
-  );
-
-  const ts = parts["ts"];
-  const receivedHmac = parts["h1"];
-  if (!ts || !receivedHmac) {
+  // Paddle may include multiple h1 values during secret rotation.
+  const signatureParts = signatureHeader.split(";").map((part) => part.trim());
+  const ts = signatureParts.find((part) => part.startsWith("ts="))?.slice(3);
+  const receivedHmacs = signatureParts
+    .filter((part) => part.startsWith("h1="))
+    .map((part) => part.slice(3))
+    .filter(Boolean);
+  if (!ts || receivedHmacs.length === 0 || !/^\d+$/.test(ts)) {
     throw new Error("Malformed Paddle-Signature header.");
   }
 
@@ -86,7 +83,7 @@ export async function verifyPaddleWebhook(
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  if (!timingSafeEqual(expectedHmac, receivedHmac)) {
+  if (!receivedHmacs.some((receivedHmac) => timingSafeEqual(expectedHmac, receivedHmac))) {
     throw new Error("Invalid Paddle webhook signature.");
   }
 
@@ -120,6 +117,7 @@ export async function processPaddleEvent(
   switch (event_type) {
     case "subscription.activated":
     case "subscription.updated":
+    case "subscription.resumed":
       await handleSubscriptionChange(
         data as PaddleSubscriptionData,
         supabase,
@@ -210,7 +208,10 @@ async function handleSubscriptionCancelled(
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
     .eq("user_id", userId);
 
-  if (error) console.error("[paddle] Failed to cancel subscription:", error.message);
+  if (error) {
+    console.error("[paddle] Failed to cancel subscription:", error.message);
+    throw error;
+  }
 }
 
 async function handleSubscriptionPaused(
@@ -228,7 +229,10 @@ async function handleSubscriptionPaused(
     .update({ status: "paused", updated_at: new Date().toISOString() })
     .eq("user_id", userId);
 
-  if (error) console.error("[paddle] Failed to pause subscription:", error.message);
+  if (error) {
+    console.error("[paddle] Failed to pause subscription:", error.message);
+    throw error;
+  }
 }
 
 async function handleTransactionCompleted(
@@ -270,12 +274,16 @@ async function handleTransactionCompleted(
     .from("subscriptions")
     .upsert(row, { onConflict: "user_id" });
 
-  if (error) console.error("[paddle] Failed to upsert lifetime sub:", error.message);
+  if (error) {
+    console.error("[paddle] Failed to upsert lifetime sub:", error.message);
+    throw error;
+  }
 }
 
 // ── Paddle payload types (minimal — extend as needed) ─────────────────────
 
 interface PaddleWebhookPayload {
+  event_id?: string;
   event_type: string;
   data: PaddleSubscriptionData | PaddleTransactionData;
 }

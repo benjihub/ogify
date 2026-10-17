@@ -19,7 +19,7 @@ export default function TermsPage() {
             </p>
             <h1 className="text-4xl leading-tight text-paper">Terms of Service</h1>
             <p className="max-w-2xl text-sm text-muted">
-              Last updated: June 30, 2026
+              Last updated: October 17, 2026
             </p>
           </header>
 
@@ -68,8 +68,7 @@ export default function TermsPage() {
               <li>Generate images for illegal, harmful, abusive, or fraudulent content.</li>
               <li>Attempt to overload, DDoS, or circumvent rate limits.</li>
               <li>
-                Resell the raw API without meaningful value-add (white-label use is
-                allowed under a white-label plan).
+                Resell or proxy the raw API in a way that bypasses plan limits, authentication, or applicable usage restrictions.
               </li>
               <li>Violate any applicable laws.</li>
             </ul>
@@ -89,9 +88,7 @@ export default function TermsPage() {
               infrastructure.
             </p>
             <p>
-              If you use a free plan, generated images may contain a
-              &quot;Powered by Ogify&quot; watermark. Paid plans remove this watermark;
-              white-label plans allow your own branding.
+              Built-in templates on the free plan may include an Ogify template mark. Paid plans may replace that mark with an optional brand label where supported.
             </p>
           </Section>
 
@@ -116,7 +113,7 @@ export default function TermsPage() {
               Billing: Paddle.com - see Paddle&apos;s privacy policy for how they
               handle your data.
             </p>
-            <p>Email: Resend.com may process account-related emails.</p>
+            <p>Authentication email delivery is handled through the configured authentication provider.</p>
             <p>
               By using Ogify, you also agree to these third-party providers&apos;
               terms where applicable.
@@ -142,8 +139,7 @@ export default function TermsPage() {
 
           <Section title="10. Contact">
             <p>
-              If you have questions, contact us at [your email] or on [Twitter
-              handle / Discord].
+              If you have questions, contact us at support@ogify.online.
             </p>
           </Section>
 

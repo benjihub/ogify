@@ -3,7 +3,7 @@
  *
  * Before deploying:
  * - create the CACHE KV namespace and paste real ids below
- * - create the optional RENDERS R2 bucket, or remove that binding if unused
+ * - public image delivery currently uses the existing CACHE KV binding
  * - set secrets with `wrangler secret put ...`
  */
 {
@@ -29,7 +29,7 @@
   "rules": [
     {
       "type": "Data",
-      "globs": ["**/*.ttf"],
+      "globs": ["**/*.woff2"],
       "fallthrough": false
     },
     {

@@ -1,44 +1,23 @@
-import Link from "next/link";
 import { CodeBlock, DocsSection, DocsShell } from "../docs-shell";
 
 export default function RateLimitsPage() {
   return (
-    <DocsShell
-      title="Rate limits & usage"
-      description="Understand plan limits, how usage is counted, and what happens when an account runs out of quota."
-    >
-      <DocsSection title="Plan limits">
-        <ul className="list-disc space-y-2 pl-5">
-          <li>Free: 100 renders per month.</li>
-          <li>Starter: 500 renders per month.</li>
-          <li>Pro: 2,000 renders per month.</li>
-          <li>Business: 10,000 renders per month.</li>
-        </ul>
-      </DocsSection>
-
-      <DocsSection title="Check usage">
-        <p>Use the dashboard for now. A `/usage` API endpoint can be added later for automated monitoring.</p>
-        <Link href="/dashboard" className="text-cinnabar hover:underline">
-          Open dashboard
-        </Link>
-      </DocsSection>
-
-      <DocsSection title="Limit exceeded behavior">
-        <p>When a key exceeds its limit, Ogify returns HTTP 429 with a retry hint.</p>
-        <CodeBlock>{`HTTP/1.1 429 Too Many Requests
-Retry-After: 86400
+    <DocsShell title="Rate limits & usage" description="Ogify combines monthly plan quotas with short-window burst protection so one integration cannot overload rendering capacity.">
+      <DocsSection title="Monthly plan quotas"><ul className="list-disc space-y-2 pl-5"><li>Free: 100 renders/month.</li><li>Starter: 500 renders/month.</li><li>Pro: 2,000 renders/month.</li><li>Business: 10,000 renders/month.</li><li>Founder&apos;s Lifetime: 5,000 renders/month.</li></ul></DocsSection>
+      <DocsSection title="Check usage"><CodeBlock>{`curl https://api.ogify.online/v1/me/usage \\
+  -H "x-api-key: $OGIFY_KEY"`}</CodeBlock></DocsSection>
+      <DocsSection title="Rate-limit headers"><CodeBlock>{`X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 58
+X-RateLimit-Reset: 31`}</CodeBlock><p>The short-window limit varies by plan. These headers are best-effort edge controls; your monthly quota remains the account-level usage limit.</p></DocsSection>
+      <DocsSection title="Limit exceeded"><CodeBlock>{`HTTP/1.1 429 Too Many Requests
+Retry-After: 31
 Content-Type: application/json
 
-{ "error": "Rate limit exceeded" }`}</CodeBlock>
-      </DocsSection>
-
-      <DocsSection title="Caching & best practices">
-        <ul className="list-disc space-y-2 pl-5">
-          <li>Cache generated images at the edge and respect ETags.</li>
-          <li>Use stable `og:image` URLs so social platforms can reuse previews.</li>
-          <li>Pre-generate important images during CI/CD for launch pages and high-traffic posts.</li>
-        </ul>
-      </DocsSection>
+{
+  "error": "Too many requests...",
+  "code": "RATE_LIMITED",
+  "request_id": "..."
+}`}</CodeBlock></DocsSection>
     </DocsShell>
   );
 }

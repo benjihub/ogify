@@ -1,4 +1,4 @@
-declare module "*.ttf" {
-  const font: ArrayBuffer;
-  export default font;
+declare module "*.woff2" {
+  const data: ArrayBuffer;
+  export default data;
 }

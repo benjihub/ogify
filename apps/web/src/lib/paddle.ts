@@ -39,8 +39,8 @@ export const PLAN_LIMITS: Record<PlanId, number> = {
 
 export const PLAN_PRICES: Record<PlanId, string> = {
   free: "$0 / mo",
-  starter: "$10 / mo",
-  pro: "$29 / mo",
-  business: "$99 / mo",
+  starter: "$10/mo · $100/yr",
+  pro: "$29/mo · $290/yr",
+  business: "$99/mo · $990/yr",
   lifetime: "$99 one-time",
 };
