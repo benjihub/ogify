@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { getApiBaseUrl } from "@/lib/api-base";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.ogify.online";
+const API_BASE = getApiBaseUrl();
 
 export function TemplateStudio() {
   const [apiKey, setApiKey] = useState("");

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { getApiBaseUrl } from "@/lib/api-base";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.ogify.online";
+const API_BASE = getApiBaseUrl();
 type Mode = "template" | "screenshot" | "social" | "html" | "pdf" | "metadata" | "content";
 
 export function RenderStudio() {
@@ -14,6 +15,7 @@ export function RenderStudio() {
   const [template, setTemplate] = useState("blog");
   const [html, setHtml] = useState('<main style="display:grid;place-items:center;width:100vw;height:100vh;background:#111827;color:white;font-family:Arial"><h1>Hello from Ogify</h1></main>');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
   const [jsonResult, setJsonResult] = useState<string>("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -22,6 +24,7 @@ export function RenderStudio() {
     setBusy(true);
     setError("");
     setResultUrl(null);
+    setImageError("");
     setJsonResult("");
     try {
       if (!apiKey.trim()) throw new Error("Paste an API key for this browser session. The dashboard does not persist it.");
@@ -34,7 +37,10 @@ export function RenderStudio() {
       const data = await response.json() as { url?: string; image_url?: string; error?: string; request_id?: string; metadata?: unknown };
       if (!response.ok) throw new Error(`${data.error || `Request failed (${response.status})`}${data.request_id ? ` · request ${data.request_id}` : ""}`);
       const publicUrl = data.url || data.image_url || null;
-      if (publicUrl && mode !== "pdf") setResultUrl(publicUrl);
+      if (mode !== "pdf" && ["template", "screenshot", "social", "html"].includes(mode) && !publicUrl) {
+        throw new Error("Render succeeded but the API did not return an image URL.");
+      }
+      if (publicUrl && mode !== "pdf") setResultUrl(resolveApiUrl(publicUrl));
       setJsonResult(JSON.stringify(data, null, 2));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed.");
@@ -74,13 +80,22 @@ export function RenderStudio() {
 
         <div className="space-y-3">
           <div className="aspect-[1200/630] overflow-hidden rounded-2xl border border-line-dim bg-ink shadow-inner">
-            {resultUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={resultUrl} alt="Ogify render result" className="h-full w-full object-contain" /> : <div className="grid h-full place-items-center px-8 text-center text-sm leading-6 text-muted">Image output appears here. PDF requests return a hosted URL in the response below.</div>}
+            {resultUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={resultUrl} alt="Ogify render result" onLoad={() => setImageError("")} onError={() => setImageError("The API returned an image URL, but the browser could not load it.")} className="h-full w-full object-contain" /> : <div className="grid h-full place-items-center px-8 text-center text-sm leading-6 text-muted">Image output appears here. PDF requests return a hosted URL in the response below.</div>}
           </div>
+          {imageError && <p role="alert" className="rounded-xl border border-cinnabar/25 bg-cinnabar/10 p-3 text-sm leading-5 text-cinnabar">{imageError}</p>}
           {jsonResult && <pre className="code-card max-h-64 overflow-auto text-[11px]">{jsonResult}</pre>}
         </div>
       </div>
     </section>
   );
+}
+
+function resolveApiUrl(value: string): string {
+  try {
+    return new URL(value, `${API_BASE}/`).toString();
+  } catch {
+    return value;
+  }
 }
 
 function requestForMode(mode: Mode, values: { title: string; url: string; template: string; html: string }) {

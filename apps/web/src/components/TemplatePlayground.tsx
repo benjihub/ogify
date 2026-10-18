@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { getApiBaseUrl } from "@/lib/api-base";
 
 type TemplateId = "blog" | "product" | "saas";
 
@@ -11,7 +12,7 @@ const TEMPLATES: Record<TemplateId, { tag: string; title: string; author: string
   saas: { tag: "Changelog", title: "Now with team workspaces", author: "Flowbase · flowbase.app" },
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.ogify.online";
+const API_BASE = getApiBaseUrl();
 
 export function TemplatePlayground() {
   const [activeTemplate, setActiveTemplate] = useState<TemplateId>("blog");
