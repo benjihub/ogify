@@ -6,6 +6,7 @@ import { getApiBaseUrl } from "@/lib/api-base";
 
 const API_BASE = getApiBaseUrl();
 type Mode = "template" | "screenshot" | "social" | "html" | "pdf" | "metadata" | "content";
+const IMAGE_MODES: Mode[] = ["template", "screenshot", "social", "html"];
 
 export function RenderStudio() {
   const [mode, setMode] = useState<Mode>("template");
@@ -37,10 +38,10 @@ export function RenderStudio() {
       const data = await response.json() as { url?: string; image_url?: string; error?: string; request_id?: string; metadata?: unknown };
       if (!response.ok) throw new Error(`${data.error || `Request failed (${response.status})`}${data.request_id ? ` · request ${data.request_id}` : ""}`);
       const publicUrl = data.url || data.image_url || null;
-      if (mode !== "pdf" && ["template", "screenshot", "social", "html"].includes(mode) && !publicUrl) {
+      if (IMAGE_MODES.includes(mode) && !publicUrl) {
         throw new Error("Render succeeded but the API did not return an image URL.");
       }
-      if (publicUrl && mode !== "pdf") setResultUrl(resolveApiUrl(publicUrl));
+      if (publicUrl) setResultUrl(resolveApiUrl(publicUrl));
       setJsonResult(JSON.stringify(data, null, 2));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed.");
@@ -80,7 +81,7 @@ export function RenderStudio() {
 
         <div className="space-y-3">
           <div className="aspect-[1200/630] overflow-hidden rounded-2xl border border-line-dim bg-ink shadow-inner">
-            {resultUrl ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={resultUrl} alt="Ogify render result" onLoad={() => setImageError("")} onError={() => setImageError("The API returned an image URL, but the browser could not load it.")} className="h-full w-full object-contain" /> : <div className="grid h-full place-items-center px-8 text-center text-sm leading-6 text-muted">Image output appears here. PDF requests return a hosted URL in the response below.</div>}
+            {resultUrl && IMAGE_MODES.includes(mode) ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={resultUrl} alt="Ogify render result" onLoad={() => setImageError("")} onError={() => setImageError("The API returned an image URL, but the browser could not load it.")} className="h-full w-full object-contain" /> : mode === "pdf" && resultUrl ? <div className="grid h-full place-items-center px-8 text-center"><div><div className="mb-3 text-3xl" aria-hidden="true">▣</div><a href={resultUrl} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-xl bg-cinnabar px-4 py-3 text-sm font-semibold text-white transition hover:bg-cinnabar-dark">Open generated PDF ↗</a><p className="mt-3 max-w-sm text-xs leading-5 text-muted">The PDF is hosted as a downloadable asset rather than displayed as an image.</p></div></div> : mode === "metadata" || mode === "content" ? <div className="grid h-full place-items-center px-8 text-center text-sm leading-6 text-emerald-300">Extraction succeeded. The structured response is shown below.</div> : <div className="grid h-full place-items-center px-8 text-center text-sm leading-6 text-muted">Image output appears here.</div>}
           </div>
           {imageError && <p role="alert" className="rounded-xl border border-cinnabar/25 bg-cinnabar/10 p-3 text-sm leading-5 text-cinnabar">{imageError}</p>}
           {jsonResult && <pre className="code-card max-h-64 overflow-auto text-[11px]">{jsonResult}</pre>}
