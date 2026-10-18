@@ -31,7 +31,6 @@ import type {
   TemplateRenderRequest,
   ScreenshotRequest,
   CompositeRenderRequest,
-  PublicRenderResponse,
   HtmlRenderRequest,
   PdfRenderRequest,
   MetadataExtractRequest,
@@ -69,7 +68,7 @@ import { renderCompositeSvg } from "./lib/renderers/composite.js";
 import { verifyPaddleWebhook, processPaddleEvent } from "./lib/paddle.js";
 import { checkApiRateLimit, checkDemoRateLimit } from "./lib/rate-limit.js";
 import { isSafeHexColor, parsePublicHttpUrl } from "./lib/security.js";
-import { getPublicImage, imageContentId, makePublicImageUrl, persistPublicImage } from "./lib/public-images.js";
+import { getPublicImage } from "./lib/public-images.js";
 import { assetContentId, getPublicAsset, makePublicAssetUrl, persistPublicAsset } from "./lib/public-assets.js";
 import {
   applyTemplateData,
@@ -296,11 +295,9 @@ app.post("/v1/render/template", requireApiKey, async (c) => {
 
   try {
     const result = await renderTemplatePng(c.env, validation.value, auth);
-    const id = await imageContentId(result.png);
-    await persistPublicImage(c.env.CACHE, id, result.png);
-    await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
+    const asset = await persistGenericAsset(c, result.png, "image/png", "png", validation.value.width ?? 1200, validation.value.height ?? 630, auth, result.cache);
     recordSuccessfulRender(c, auth, "template", validation.value.template, Date.now() - startedAt);
-    return c.json(publicRenderResponse(c, id, result.cache, validation.value.width ?? 1200, validation.value.height ?? 630, auth));
+    return c.json(imageAssetResponse(asset));
   } catch (error) {
     await recordFailedRender(c, auth, "template", validation.value.template, Date.now() - startedAt);
     console.error("[v1/render/template]", error);
@@ -377,11 +374,9 @@ app.post("/v1/render/composite", requireApiKey, async (c) => {
 
   try {
     const result = await renderCompositePng(c.env, validation.value, auth);
-    const id = await imageContentId(result.png);
-    await persistPublicImage(c.env.CACHE, id, result.png);
-    await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
+    const asset = await persistGenericAsset(c, result.png, "image/png", "png", validation.value.width ?? 1200, validation.value.height ?? 630, auth, result.cache);
     recordSuccessfulRender(c, auth, "template", "composite", Date.now() - startedAt);
-    return c.json(publicRenderResponse(c, id, result.cache, validation.value.width ?? 1200, validation.value.height ?? 630, auth));
+    return c.json(imageAssetResponse(asset));
   } catch (error) {
     await recordFailedRender(c, auth, "template", "composite", Date.now() - startedAt);
     console.error("[v1/render/composite]", error);
@@ -457,11 +452,9 @@ app.post("/v1/render/multi", requireApiKey, async (c) => {
       if (validation.value.kind === "template") {
         const payload = { ...(validation.value.payload as TemplateRenderRequest), width: variant.width, height: variant.height };
         const result = await renderTemplatePng(c.env, payload, auth);
-        const id = await imageContentId(result.png);
-        await persistPublicImage(c.env.CACHE, id, result.png);
-        await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
+        const asset = await persistGenericAsset(c, result.png, "image/png", "png", variant.width, variant.height, auth, result.cache);
         recordSuccessfulRender(c, auth, "template", payload.template, 0);
-        results.push({ ...variant, result: publicRenderResponse(c, id, result.cache, variant.width, variant.height, auth) });
+        results.push({ ...variant, result: imageAssetResponse(asset) });
       } else {
         const payload = { ...(validation.value.payload as SocialRenderRequest), width: variant.width, height: variant.height };
         const result = await renderSocialAsset(c, payload, auth);
@@ -802,23 +795,30 @@ async function renderCompositePng(env: Env, request: CompositeRenderRequest, aut
 }
 
 async function renderSocialAsset(c: Context<HonoEnv>, request: SocialRenderRequest, auth: AuthContext): Promise<PublicAssetResponse> {
-  const metadata = await extractPageMetadata(c.env, {
-    url: request.url,
-    delay: Math.min(request.delay ?? 0, 2_000),
-    wait_until: request.wait_until ?? "domcontentloaded",
-    wait_for_selector: request.wait_for_selector,
-    custom_css: request.custom_css,
-    custom_js: request.custom_js,
-    user_agent: request.user_agent,
-    headers: request.headers,
-    dark_mode: request.dark_mode,
-    cookies: request.cookies,
-    locale: request.locale,
-    timezone: request.timezone,
-    click_selector: request.click_selector,
-    scroll_to: request.scroll_to,
-    block_resources: request.block_resources,
-  });
+  let metadata: Awaited<ReturnType<typeof extractPageMetadata>>;
+  try {
+    metadata = await extractPageMetadata(c.env, {
+      url: request.url,
+      delay: Math.min(request.delay ?? 0, 2_000),
+      wait_until: request.wait_until ?? "domcontentloaded",
+      wait_for_selector: request.wait_for_selector,
+      custom_css: request.custom_css,
+      custom_js: request.custom_js,
+      user_agent: request.user_agent,
+      headers: request.headers,
+      dark_mode: request.dark_mode,
+      cookies: request.cookies,
+      locale: request.locale,
+      timezone: request.timezone,
+      click_selector: request.click_selector,
+      scroll_to: request.scroll_to,
+      block_resources: request.block_resources,
+    });
+  } catch (error) {
+    if (!request.title) throw error;
+    console.warn("[v1/render/social] metadata unavailable; using request fallback", error);
+    metadata = { url: request.url, title: "", description: "", canonical_url: request.url };
+  }
   const title = request.title || metadata.title || new URL(request.url).hostname;
   const tag = request.tag || metadata.site_name || "Website";
   const author = request.author || metadata.canonical_url || metadata.url;
@@ -849,8 +849,14 @@ async function renderSocialAsset(c: Context<HonoEnv>, request: SocialRenderReque
     scroll_to: request.scroll_to,
     block_resources: request.block_resources,
   };
-  const result = await renderCompositePng(c.env, composite, auth);
-  return persistGenericAsset(c, result.png, "image/png", "png", composite.width, composite.height, auth, result.cache);
+  try {
+    const result = await renderCompositePng(c.env, composite, auth);
+    return persistGenericAsset(c, result.png, "image/png", "png", composite.width, composite.height, auth, result.cache);
+  } catch (error) {
+    console.warn("[v1/render/social] branded composition failed; returning screenshot fallback", error);
+    const screenshot = await captureUrl(c.env, toCaptureOptions(composite));
+    return persistGenericAsset(c, screenshot.bytes, screenshot.contentType, screenshot.extension, screenshot.width, screenshot.height, auth, "MISS");
+  }
 }
 
 async function executeOperation(c: Context<HonoEnv>, operation: BatchOperation, auth: AuthContext, account: boolean): Promise<unknown> {
@@ -860,11 +866,9 @@ async function executeOperation(c: Context<HonoEnv>, operation: BatchOperation, 
       const validation = validateTemplateBody(operation.payload);
       if (!validation.ok) throw new Error(validation.error);
       const result = await renderTemplatePng(c.env, validation.value, auth);
-      const id = await imageContentId(result.png);
-      await persistPublicImage(c.env.CACHE, id, result.png);
-      await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
+      const asset = await persistGenericAsset(c, result.png, "image/png", "png", validation.value.width ?? 1200, validation.value.height ?? 630, auth, result.cache);
       if (account) recordSuccessfulRender(c, auth, "template", validation.value.template, Date.now() - startedAt);
-      return publicRenderResponse(c, id, result.cache, validation.value.width ?? 1200, validation.value.height ?? 630, auth);
+      return imageAssetResponse(asset);
     }
     case "url": {
       const validation = validateScreenshotBody(operation.payload);
@@ -981,17 +985,8 @@ async function putEdgeAsset(url: string, response: Response): Promise<void> {
   }
 }
 
-function publicRenderResponse(c: Context<HonoEnv>, id: string, cache: "HIT" | "MISS", width: number, height: number, auth: AuthContext): PublicRenderResponse {
-  return {
-    id,
-    image_url: makePublicImageUrl(c.req.url, id),
-    content_type: "image/png",
-    width,
-    height,
-    cache,
-    renders_used: Math.min(auth.rendersLimit, auth.rendersUsed + 1),
-    renders_limit: auth.rendersLimit,
-  };
+function imageAssetResponse(asset: PublicAssetResponse): PublicAssetResponse & { image_url: string } {
+  return { ...asset, image_url: asset.url };
 }
 
 // ── Accounting/logs ───────────────────────────────────────────────────────
