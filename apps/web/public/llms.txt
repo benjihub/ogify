@@ -1,0 +1,43 @@
+# Ogify
+
+> Ogify is a developer API for website screenshots, HTML-to-image rendering, URL/HTML-to-PDF generation, Open Graph images, branded social cards, page metadata extraction, rendered-content extraction, reusable templates, and hosted render assets.
+
+Canonical website: https://ogify.online
+API base URL: https://api.ogify.online
+
+## Start here
+- [Website](https://ogify.online/): Product overview and live rendering demo.
+- [Quickstart](https://ogify.online/docs/quickstart): Create an API key and make your first render request.
+- [API documentation](https://ogify.online/docs): API guides and endpoint reference.
+- [Pricing](https://ogify.online/pricing): Plans and monthly render quotas.
+- [Examples](https://ogify.online/examples): Copyable cURL and integration examples.
+- [Template gallery](https://ogify.online/docs/templates): Built-in social-card templates and reusable HTML templates.
+- [JavaScript SDK and CLI](https://ogify.online/docs/sdk): TypeScript SDK and command-line workflows.
+
+## Main capabilities
+- [Open Graph image API](https://ogify.online/open-graph-image-api): Generate share images from structured content.
+- [Dynamic OG images](https://ogify.online/dynamic-og-images): Create content-driven social images during publishing or deployment.
+- [Next.js OG images](https://ogify.online/nextjs-og-images): Integrate rendering with Next.js metadata and server-side code.
+- [Website screenshot API](https://ogify.online/website-screenshot-api): Capture public URLs as images.
+- [Social preview image generator](https://ogify.online/social-preview-image-generator): Generate branded social cards and screenshot composites.
+- [Cloudflare screenshot API](https://ogify.online/cloudflare-screenshot-api): Learn about the hosted browser-rendering API.
+
+## API endpoints
+- `POST /v1/render/url` — website screenshots.
+- `POST /v1/render/html` — HTML and CSS to image.
+- `POST /v1/render/pdf` — URL or HTML to PDF.
+- `POST /v1/render/template` — render a built-in or reusable template.
+- `POST /v1/render/social` — extract page metadata and generate a branded social card.
+- `POST /v1/render/composite` — capture a website and place it inside a branded card.
+- `POST /v1/render/batch` — run multiple rendering operations.
+- `POST /v1/extract/metadata` — extract Open Graph and page metadata.
+- `POST /v1/extract/content` — extract rendered content and resolved links.
+
+## Integration guidance
+- API keys must remain server-side and must not be placed in public browser code.
+- Start with the quickstart before using endpoint-specific reference pages.
+- Use the official docs for current request fields, authentication, limits, and response schemas.
+
+## Policies
+- [Privacy policy](https://ogify.online/privacy)
+- [Terms of service](https://ogify.online/terms)
