@@ -10,6 +10,7 @@ export interface PublicAssetMeta {
 
 const BODY_PREFIX = "public-asset:body:";
 const META_PREFIX = "public-asset:meta:";
+const PUBLIC_READ_CACHE_TTL_SECONDS = 30;
 
 export async function assetContentId(bytes: Uint8Array, _extension?: string): Promise<string> {
   // Copy into an ArrayBuffer-backed view for the Web Crypto BufferSource types.
@@ -44,8 +45,8 @@ export async function persistPublicAsset(
 
 export async function getPublicAsset(kv: KVNamespace, id: string): Promise<{ bytes: Uint8Array; meta: PublicAssetMeta } | null> {
   const [body, metaText] = await Promise.all([
-    kv.get(`${BODY_PREFIX}${id}`, "arrayBuffer"),
-    kv.get(`${META_PREFIX}${id}`),
+    kv.get(`${BODY_PREFIX}${id}`, { type: "arrayBuffer", cacheTtl: PUBLIC_READ_CACHE_TTL_SECONDS }),
+    kv.get(`${META_PREFIX}${id}`, { type: "text", cacheTtl: PUBLIC_READ_CACHE_TTL_SECONDS }),
   ]);
   if (!body || !metaText) return null;
   try {

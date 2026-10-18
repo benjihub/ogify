@@ -1,4 +1,5 @@
 const PUBLIC_TTL_SECONDS = 60 * 60 * 24 * 365;
+const PUBLIC_READ_CACHE_TTL_SECONDS = 30;
 
 export function publicImageKey(id: string): string {
   return `public-image:${id}`;
@@ -18,7 +19,7 @@ export async function getPublicImage(
   kv: KVNamespace,
   id: string
 ): Promise<Uint8Array | null> {
-  const value = await kv.get(publicImageKey(id), "arrayBuffer");
+  const value = await kv.get(publicImageKey(id), { type: "arrayBuffer", cacheTtl: PUBLIC_READ_CACHE_TTL_SECONDS });
   return value ? new Uint8Array(value) : null;
 }
 
