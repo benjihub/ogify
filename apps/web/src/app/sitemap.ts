@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://ogify.online";
+  const base = "https://ogify.tools";
   const paths = [
     "", "/pricing", "/docs", "/docs/quickstart", "/docs/authentication",
     "/docs/api-reference/render-template", "/docs/api-reference/render-url",
