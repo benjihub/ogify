@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const siteUrl = "https://ogify.tools";
+const siteUrl = "https://ogify.online";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
