@@ -168,9 +168,13 @@ app.get("/i/:id.png", async (c) => {
   if (c.req.header("If-None-Match") === etag) {
     return new Response(null, { status: 304, headers: { ETag: etag, "Cache-Control": "public, max-age=31536000, immutable" } });
   }
+  const edgeCached = await caches.default.match(c.req.raw);
+  if (edgeCached) return edgeCached;
   const png = await getPublicImage(c.env.CACHE, id);
   if (!png) return jsonError(c, 404, "NOT_FOUND", "Image not found or expired.");
-  return binaryResponse(png, "image/png", { etag, cacheControl: "public, max-age=31536000, immutable" });
+  const response = binaryResponse(png, "image/png", { etag, cacheControl: "public, max-age=31536000, immutable" });
+  await putEdgeAsset(c.req.url, response);
+  return response;
 });
 
 app.on("HEAD", "/i/:id.png", async (c) => {
@@ -195,11 +199,15 @@ app.get("/a/:asset", async (c) => {
   const match = /^([a-f0-9]{24,80})\.([a-z0-9]{2,5})$/i.exec(name);
   if (!match) return jsonError(c, 404, "NOT_FOUND", "Asset not found.");
   const [, id, ext] = match;
+  const edgeCached = await caches.default.match(c.req.raw);
+  if (edgeCached) return edgeCached;
   const asset = await getPublicAsset(c.env.CACHE, id);
   if (!asset || asset.meta.extension !== ext.toLowerCase()) return jsonError(c, 404, "NOT_FOUND", "Asset not found or expired.");
   const etag = `"${id}"`;
   if (c.req.header("If-None-Match") === etag) return new Response(null, { status: 304, headers: { ETag: etag, "Cache-Control": "public, max-age=2592000, immutable" } });
-  return binaryResponse(asset.bytes, asset.meta.content_type, { etag, cacheControl: "public, max-age=2592000, immutable" });
+  const response = binaryResponse(asset.bytes, asset.meta.content_type, { etag, cacheControl: "public, max-age=2592000, immutable" });
+  await putEdgeAsset(c.req.url, response);
+  return response;
 });
 
 app.on("HEAD", "/a/:asset", async (c) => {
@@ -290,6 +298,7 @@ app.post("/v1/render/template", requireApiKey, async (c) => {
     const result = await renderTemplatePng(c.env, validation.value, auth);
     const id = await imageContentId(result.png);
     await persistPublicImage(c.env.CACHE, id, result.png);
+    await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
     recordSuccessfulRender(c, auth, "template", validation.value.template, Date.now() - startedAt);
     return c.json(publicRenderResponse(c, id, result.cache, validation.value.width ?? 1200, validation.value.height ?? 630, auth));
   } catch (error) {
@@ -370,6 +379,7 @@ app.post("/v1/render/composite", requireApiKey, async (c) => {
     const result = await renderCompositePng(c.env, validation.value, auth);
     const id = await imageContentId(result.png);
     await persistPublicImage(c.env.CACHE, id, result.png);
+    await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
     recordSuccessfulRender(c, auth, "template", "composite", Date.now() - startedAt);
     return c.json(publicRenderResponse(c, id, result.cache, validation.value.width ?? 1200, validation.value.height ?? 630, auth));
   } catch (error) {
@@ -449,6 +459,7 @@ app.post("/v1/render/multi", requireApiKey, async (c) => {
         const result = await renderTemplatePng(c.env, payload, auth);
         const id = await imageContentId(result.png);
         await persistPublicImage(c.env.CACHE, id, result.png);
+        await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
         recordSuccessfulRender(c, auth, "template", payload.template, 0);
         results.push({ ...variant, result: publicRenderResponse(c, id, result.cache, variant.width, variant.height, auth) });
       } else {
@@ -851,6 +862,7 @@ async function executeOperation(c: Context<HonoEnv>, operation: BatchOperation, 
       const result = await renderTemplatePng(c.env, validation.value, auth);
       const id = await imageContentId(result.png);
       await persistPublicImage(c.env.CACHE, id, result.png);
+      await putEdgeAsset(makePublicImageUrl(c.req.url, id), binaryResponse(result.png, "image/png", { etag: `"${id}"`, cacheControl: "public, max-age=31536000, immutable" }));
       if (account) recordSuccessfulRender(c, auth, "template", validation.value.template, Date.now() - startedAt);
       return publicRenderResponse(c, id, result.cache, validation.value.width ?? 1200, validation.value.height ?? 630, auth);
     }
@@ -911,9 +923,11 @@ async function persistGenericAsset(
 ): Promise<PublicAssetResponse> {
   const id = await assetContentId(bytes, extension);
   const meta = await persistPublicAsset(c.env.CACHE, id, bytes, { content_type: contentType, extension, width, height });
+  const url = makePublicAssetUrl(c.req.url, id, extension);
+  await putEdgeAsset(url, binaryResponse(bytes, contentType, { etag: `"${id}"`, cacheControl: "public, max-age=2592000, immutable" }));
   return {
     id,
-    url: makePublicAssetUrl(c.req.url, id, extension),
+    url,
     content_type: contentType,
     extension,
     bytes: meta.bytes,
@@ -931,7 +945,7 @@ async function getCachedPng(kv: KVNamespace, key: string): Promise<Uint8Array | 
 }
 
 async function cachePng(kv: KVNamespace, key: string, png: Uint8Array, expirationTtl: number): Promise<void> {
-  await kv.put(key, png.buffer as ArrayBuffer, { expirationTtl });
+  await kv.put(key, png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength) as ArrayBuffer, { expirationTtl });
 }
 
 function pngResponse(png: Uint8Array, cache: "HIT" | "MISS", auth?: AuthContext, cacheControl = "public, max-age=31536000, immutable"): Response {
@@ -945,7 +959,7 @@ function pngResponse(png: Uint8Array, cache: "HIT" | "MISS", auth?: AuthContext,
     headers["X-Renders-Used"] = String(Math.min(auth.rendersLimit, auth.rendersUsed + 1));
     headers["X-Renders-Limit"] = String(auth.rendersLimit);
   }
-  return new Response(png.buffer as ArrayBuffer, { headers });
+  return new Response(png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength) as ArrayBuffer, { headers });
 }
 
 function binaryResponse(bytes: Uint8Array, contentType: string, options: { etag?: string; cacheControl?: string } = {}): Response {
@@ -956,7 +970,15 @@ function binaryResponse(bytes: Uint8Array, contentType: string, options: { etag?
     "Cross-Origin-Resource-Policy": "cross-origin",
   };
   if (options.etag) headers.ETag = options.etag;
-  return new Response(bytes.buffer as ArrayBuffer, { headers });
+  return new Response(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, { headers });
+}
+
+async function putEdgeAsset(url: string, response: Response): Promise<void> {
+  try {
+    await caches.default.put(new Request(url, { method: "GET" }), response.clone());
+  } catch (error) {
+    console.warn("[edge-cache] public asset cache write failed", error);
+  }
 }
 
 function publicRenderResponse(c: Context<HonoEnv>, id: string, cache: "HIT" | "MISS", width: number, height: number, auth: AuthContext): PublicRenderResponse {

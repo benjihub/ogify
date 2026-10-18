@@ -36,7 +36,7 @@ export async function persistPublicAsset(
     created_at: new Date().toISOString(),
   };
   await Promise.all([
-    kv.put(`${BODY_PREFIX}${id}`, bytes.buffer as ArrayBuffer, { expirationTtl: ttlSeconds }),
+    kv.put(`${BODY_PREFIX}${id}`, toArrayBuffer(bytes), { expirationTtl: ttlSeconds }),
     kv.put(`${META_PREFIX}${id}`, JSON.stringify(complete), { expirationTtl: ttlSeconds }),
   ]);
   return complete;
@@ -59,4 +59,8 @@ export async function getPublicAsset(kv: KVNamespace, id: string): Promise<{ byt
 export function makePublicAssetUrl(requestUrl: string, id: string, extension: string): string {
   const origin = new URL(requestUrl).origin;
   return `${origin}/a/${id}.${extension}`;
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }

@@ -9,7 +9,7 @@ export async function persistPublicImage(
   id: string,
   png: Uint8Array
 ): Promise<void> {
-  await kv.put(publicImageKey(id), png.buffer as ArrayBuffer, {
+  await kv.put(publicImageKey(id), toArrayBuffer(png), {
     expirationTtl: PUBLIC_TTL_SECONDS,
   });
 }
@@ -33,4 +33,8 @@ export async function imageContentId(png: Uint8Array): Promise<string> {
     : png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength);
   const digest = await crypto.subtle.digest("SHA-256", slice as ArrayBuffer);
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
