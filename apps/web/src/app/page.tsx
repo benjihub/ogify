@@ -48,14 +48,9 @@ export default function LandingPage() {
           <div className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr] lg:gap-14">
             <div>
               <div className="eyebrow mb-4">Render API for developers</div>
-              <h1 className="max-w-[760px] text-[clamp(2.55rem,5.3vw,4.3rem)] leading-[1.02] tracking-[-0.045em] text-paper">Generate beautiful <span className="text-cinnabar">Open Graph images, screenshots, and PDFs</span> with one API call—no browser infrastructure to maintain.</h1>
+              <h1 className="max-w-[760px] text-[clamp(2.55rem,5.3vw,4.3rem)] leading-[1.02] tracking-[-0.045em] text-paper">Render websites and HTML into <span className="text-cinnabar">images, PDFs & social cards</span>.</h1>
               <p className="mt-5 max-w-[560px] text-base leading-7 text-muted sm:text-[17px]">One API for screenshots, HTML-to-image, PDFs, reusable templates, social cards, batch jobs and hosted render assets — without operating your own browser fleet.</p>
               <div className="mt-7 flex flex-wrap gap-3"><Button asChild href="/signup">Get started free</Button><Button asChild href="/docs" variant="ghost">Read the docs</Button></div>
-              <div className="mt-4 flex flex-wrap gap-2" aria-label="Popular use cases">
-                <Button asChild href="/open-graph-image-api" variant="secondary" size="sm">Create OG images for my blog</Button>
-                <Button asChild href="/website-screenshot-api" variant="secondary" size="sm">Screenshot any website</Button>
-                <Button asChild href="/docs/api-reference/render-pdf" variant="secondary" size="sm">Turn HTML into a PDF</Button>
-              </div>
               <div className="mt-8 flex flex-wrap items-center gap-2 text-xs font-medium text-muted"><span className="rounded-full border border-line-dim bg-ink-soft/80 px-3 py-1.5">100 free renders / month</span><span className="rounded-full border border-line-dim bg-ink-soft/80 px-3 py-1.5">SDK + CLI</span><span className="rounded-full border border-line-dim bg-ink-soft/80 px-3 py-1.5">Hosted asset URLs</span></div>
             </div>
             <HeroCard />
