@@ -795,8 +795,13 @@ async function renderCompositePng(env: Env, request: CompositeRenderRequest, aut
 }
 
 async function renderSocialAsset(c: Context<HonoEnv>, request: SocialRenderRequest, auth: AuthContext): Promise<PublicAssetResponse> {
-  let metadata: Awaited<ReturnType<typeof extractPageMetadata>>;
-  try {
+  let metadata: Awaited<ReturnType<typeof extractPageMetadata>> = {
+    url: request.url,
+    title: "",
+    description: "",
+    canonical_url: request.url,
+  };
+  if (!request.title) {
     metadata = await extractPageMetadata(c.env, {
       url: request.url,
       delay: Math.min(request.delay ?? 0, 2_000),
@@ -814,10 +819,6 @@ async function renderSocialAsset(c: Context<HonoEnv>, request: SocialRenderReque
       scroll_to: request.scroll_to,
       block_resources: request.block_resources,
     });
-  } catch (error) {
-    if (!request.title) throw error;
-    console.warn("[v1/render/social] metadata unavailable; using request fallback", error);
-    metadata = { url: request.url, title: "", description: "", canonical_url: request.url };
   }
   const title = request.title || metadata.title || new URL(request.url).hostname;
   const tag = request.tag || metadata.site_name || "Website";
