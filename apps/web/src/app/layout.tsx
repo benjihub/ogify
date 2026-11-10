@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
